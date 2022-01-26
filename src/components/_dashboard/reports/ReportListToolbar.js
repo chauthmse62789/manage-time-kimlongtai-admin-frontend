@@ -54,10 +54,7 @@ export default function ReportListToolbar({ numSelected, filterName, onFilterNam
           {numSelected} selected
         </Typography>
       ) : (
-        <div>
-
-         
-
+        <div> 
         </div>
 
       )}

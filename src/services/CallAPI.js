@@ -13,7 +13,6 @@ export default function CallAPI(endpoint, method='GET',body,token){
         console.log(err)
       });
 
-
 };
 
 

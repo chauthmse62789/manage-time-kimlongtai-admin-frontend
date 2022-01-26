@@ -21,11 +21,16 @@ import DialogTitle from '@material-ui/core/DialogTitle';
 import Slide from '@material-ui/core/Slide';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import {  Grid, Container } from '@material-ui/core';
+import { Grid, Container } from '@material-ui/core';
 import { TextField } from '@material-ui/core';
 import { makeStyles } from '@material-ui/styles';
 import lockFill from '@iconify/icons-eva/lock-fill';
 import * as Config from './../../../constants/config';
+
+import AdapterDateFns from '@material-ui/lab/AdapterDateFns';
+import LocalizationProvider from '@material-ui/lab/LocalizationProvider';
+import viLocale from 'date-fns/locale/vi';
+import { MobileDatePicker } from '@material-ui/lab';
 // ----------------------------------------------------------------------
 
 
@@ -35,37 +40,38 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 
 const useStyles = makeStyles((theme) => ({
   formControl: {
-    
+
     minWidth: 240,
-    marginTop:10
+    marginTop: 10
   },
 }));
 
 const UserMoreMenu = (props) => {
 
   const classes = useStyles();
-  const [user, setUser] = useState({ 
+  const [user, setUser] = useState({
     id: '',
-    email: '', 
-    username: '', 
+    email: '',
+    username: '',
     phone: '',
-    firstName: '', 
+    firstName: '',
     lastName: '',
-    address: '', 
+    address: '',
     cmndcccd: '',
-    store:'',
-    dob:'',
-    password:'',
-    rePassword:'',
+    store: '',
+    dob: '',
+    password: '',
+    rePassword: '',
 
-    
-    
-    role: '' });
+
+
+    role: ''
+  });
   const navigate = useNavigate();
   const ref = useRef(null);
   const [isOpen, setIsOpen] = useState(false);
 
-  
+
   const [chooseStore, setChooseStore] = React.useState(props.idStore);
   const handleChooseStore = (event) => {
     setChooseStore(event.target.value);
@@ -97,7 +103,7 @@ const UserMoreMenu = (props) => {
   };
 
 
- 
+
 
   const handleCloseEdit = () => {
 
@@ -108,25 +114,25 @@ const UserMoreMenu = (props) => {
   };
 
 
-    //Change Password
-    const [openChangePassword, setOpenChangePassword] = React.useState(false);
+  //Change Password
+  const [openChangePassword, setOpenChangePassword] = React.useState(false);
 
-    const handleOpenChangePassword = (id) => {
-  
-      setOpenChangePassword(true)
-   
-    };
-  
-  
-   
-  
-    const handleCloseChangePassword = () => {
-  
-      setOpenChangePassword(false);
-  
-  
-  
-    };
+  const handleOpenChangePassword = (id) => {
+
+    setOpenChangePassword(true)
+
+  };
+
+
+
+
+  const handleCloseChangePassword = () => {
+
+    setOpenChangePassword(false);
+
+
+
+  };
 
 
 
@@ -141,8 +147,8 @@ const UserMoreMenu = (props) => {
 
   function deleteEmployeeById(id) {
     handleCloseDelete();
-    CallAPI(`/users/${id}`, 'DELETE', null, localStorage.getItem('jwt')).then(res => {
-      console.log(res.data)
+    CallAPI(`/users/${id}`, 'DELETE', null, sessionStorage.getItem('jwt')).then(res => {
+ 
       if (res.status === 200) {
         toast.success('🦄 Xóa nhân viên thành công', {
           position: "top-right",
@@ -185,7 +191,7 @@ const UserMoreMenu = (props) => {
 
 
 
-}
+  }
 
 
 
@@ -194,75 +200,75 @@ const UserMoreMenu = (props) => {
 
 
 
-const onChangePassword = (e) => {
-  e.preventDefault();
- 
-  if (user.password === user.rePassword) {
-    handleCloseChangePassword();
-    CallAPI(`/users/${props.idEmployee}`, 'PUT',
-    {
-      "password":user.password
+  const onChangePassword = (e) => {
+    e.preventDefault();
+
+    if (user.password === user.rePassword) {
+      handleCloseChangePassword();
+      CallAPI(`/users/${props.idEmployee}`, 'PUT',
+        {
+          "password": user.password
+        }
+
+
+
+        , sessionStorage.getItem('jwt')).then(res => {
+          if (res.status === 200) {
+            toast.success('🦄Đổi mật khẩu thành công', {
+              position: "top-right",
+              autoClose: 2000,
+              hideProgressBar: true,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+              progress: undefined,
+            });
+
+
+          }
+          props.updateEmployee({})
+
+
+
+
+
+        }).catch(err => {
+          console.log('inside catch block.');
+          if (err.response) {
+
+            console.log(err.response.data);
+            console.log(err.response.status);
+            console.log(err.response.headers);
+          } else if (err.request) {
+            console.log(err.request);
+          } else {
+
+            console.log('Error', err.message);
+            toast.error('Lỗi! Đổi mật khẩu thất bại!', {
+              position: "top-right",
+              autoClose: 2000,
+              hideProgressBar: true,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+              progress: undefined,
+            });
+          }
+          console.log(JSON.stringify(err));
+        });
+
+
+    } else {
+
+
+      setAlertValidate('\nMật khẩu không trùng khớp!Mời nhập lại.')
+
     }
 
 
 
-    , localStorage.getItem('jwt')).then(res => {
-      if (res.status === 200) {
-        toast.success('🦄Đổi mật khẩu thành công', {
-          position: "top-right",
-          autoClose: 2000,
-          hideProgressBar: true,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-        });
-
-
-      }
-      props.updateEmployee({})
-
-
-
-
-
-    }).catch(err => {
-      console.log('inside catch block.');
-      if (err.response) {
-
-        console.log(err.response.data);
-        console.log(err.response.status);
-        console.log(err.response.headers);
-      } else if (err.request) {
-        console.log(err.request);
-      } else {
-
-        console.log('Error', err.message);
-        toast.error('Lỗi! Đổi mật khẩu thất bại!', {
-          position: "top-right",
-          autoClose: 2000,
-          hideProgressBar: true,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-        });
-      }
-      console.log(JSON.stringify(err));
-    });
-
-
-  }else{
-
-
-    setAlertValidate('\nMật khẩu không trùng khớp!Mời nhập lại.')
 
   }
-
- 
-
-
-}
 
 
 
@@ -282,20 +288,20 @@ const onChangePassword = (e) => {
     handleCloseEdit();
     CallAPI(`/users/${props.idEmployee}`, 'PUT',
       {
-        "username":user.username,
+        "username": user.username,
         "firstName": user.firstName,
         "lastName": user.lastName,
-        "dob":user.dob,
+        "dob": user.dob,
         "phone": user.phone,
-        "cmndcccd":user.cmndcccd,
-        "email":user.email,
-        "address":user.address,
-        "store":chooseStore
+        "cmndcccd": user.cmndcccd,
+        "email": user.email,
+        "address": user.address,
+        "store": chooseStore
       }
 
 
 
-      , localStorage.getItem('jwt')).then(res => {
+      , sessionStorage.getItem('jwt')).then(res => {
         if (res.status === 200) {
           toast.success('🦄 Cật nhật thành công', {
             position: "top-right",
@@ -350,20 +356,20 @@ const onChangePassword = (e) => {
 
   function getUserbyId(id) {
     setOpenEdit(true);
-    CallAPI(`/users/${id}`, 'GET', null, localStorage.getItem('jwt')).then(res => {
+    CallAPI(`/users/${id}`, 'GET', null, sessionStorage.getItem('jwt')).then(res => {
       setUser({
         username: res.data.username,
         phone: res.data.phone,
         firstName: res.data.firstName,
         lastName: res.data.lastName,
-        dob:res.data.dob,
+        dob: res.data.dob,
         id: res.data.id,
-        cmndcccd:res.data.cmndcccd,
+        cmndcccd: res.data.cmndcccd,
         email: res.data.email,
         role: res.data.role.name,
-        address:res.data.address,
-        store:res.data.store
-        
+        address: res.data.address,
+        store: res.data.store
+
       })
 
     }).catch(err => {
@@ -387,14 +393,14 @@ const onChangePassword = (e) => {
 
 
 
-  const [stores,setStores] = useState([]);
+  const [stores, setStores] = useState([]);
 
-  function getStores(){
-    axios.get(`${Config.API_URL}/stores`,{
-      'headers': {'Authorization': 'Bearer ' + localStorage.getItem('jwt')}
+  function getStores() {
+    axios.get(`${Config.API_URL}/stores`, {
+      'headers': { 'Authorization': 'Bearer ' + sessionStorage.getItem('jwt') }
 
-    }).then(res=>{
-        setStores(res.data);
+    }).then(res => {
+      setStores(res.data);
     })
 
 
@@ -409,7 +415,7 @@ const onChangePassword = (e) => {
       <IconButton ref={ref} onClick={() => setIsOpen(true)}>
         <Icon icon={moreVerticalFill} width={20} height={20} />
       </IconButton>
-        
+
 
 
 
@@ -427,7 +433,7 @@ const onChangePassword = (e) => {
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
       >
 
-        
+
 
 
 
@@ -458,24 +464,24 @@ const onChangePassword = (e) => {
 
 
             <Container maxWidth="lg">
-            <br></br>
-            <FormControl>
+              <br></br>
+              <FormControl>
                 <Grid container spacing={3}>
-                <TextField required type="password" name="password" margin="normal" id="standard-basic" fullWidth label="Mật khẩu" value={user.password} onChange={onChange} />
-                <TextField required name="rePassword" type="password" margin="normal" id="standard-basic" fullWidth label="Nhập lại mật khẩu" value={user.rePassword} onChange={onChange} />
-               
+                  <TextField required type="password" name="password" margin="normal" id="standard-basic" fullWidth label="Mật khẩu" value={user.password} onChange={onChange} />
+                  <TextField required name="rePassword" type="password" margin="normal" id="standard-basic" fullWidth label="Nhập lại mật khẩu" value={user.rePassword} onChange={onChange} />
 
-                 
 
-                 
-                    </Grid>
-                   
-                 
-                    
-              
+
+
+
+                </Grid>
+
+
+
+
 
                 <Grid item xs={12} sm={6} lg={4}>
-                 
+
                   <ToastContainer
                     position="top-right"
                     autoClose={2000}
@@ -489,7 +495,7 @@ const onChangePassword = (e) => {
                   />
                 </Grid>
 
-             </FormControl>
+              </FormControl>
             </Container>
           </DialogContent>
           <DialogActions>
@@ -533,94 +539,95 @@ const onChangePassword = (e) => {
               Hành động này sẽ cật nhật lại thông tin nhân viên
             </DialogContentText>
             <Container maxWidth="lg">
-            <br></br>
-            <FormControl>
-                <Grid container spacing={3}>
+              <br></br>
+              <FormControl>
+                <LocalizationProvider dateAdapter={AdapterDateFns} locale={viLocale}>
+                  <Grid container spacing={3}>
 
 
-                 
+
 
                     <TextField name="username" margin="normal" id="standard-basic" fullWidth label="Username" value={user.username} onChange={onChange} />
                     <TextField name="role" margin="normal" id="standard-basic" fullWidth label="Quyền" value={user.role} onChange={onChange} disabled />
-                  
+
                     <TextField name="lastName" margin="normal" id="standard-basic" fullWidth label="Họ" value={user.lastName} onChange={onChange} />
-                 
+
                     <TextField name="firstName" margin="normal" id="standard-basic" fullWidth label="Tên" value={user.firstName} onChange={onChange} />
-                    <TextField
-                        fullWidth
-                        name="dob"
-                        id="date"
-                        label="Ngày sinh"
-                        type="date"
+                   
+                   
+                    <MobileDatePicker
+                        label='Ngày sinh(*)'
                         value={user.dob}
-                        onChange={onChange}
-
-                        InputLabelProps={{
-                          shrink: true,
+                        onChange={(newValue) => {
+                          setUser({ ...user, dob: newValue });
                         }}
-
+                        renderInput={(params) => <TextField fullWidth  {...params} />}
                       />
+
+
+
                     <TextField name="email" margin="normal" id="standard-basic" fullWidth label="Email" value={user.email} onChange={onChange} />
-                
+
                     <TextField name="cmndcccd" type="number" margin="normal" id="standard-basic" fullWidth label="CMND/CCCD" value={user.cmndcccd} onChange={onChange} />
                     <TextField name="address" margin="normal" id="standard-basic" fullWidth label="Địa chỉ" value={user.address} onChange={onChange} />
                     <TextField name="phone" type="number" margin="normal" id="standard-basic" fullWidth label="Phone" value={user.phone} onChange={onChange} />
-                    
+
                     <h4>Cửa hàng làm việc(*)</h4>
-                  <br></br>
-                  <br></br>
-                    </Grid>
-                    <Grid container spacing={3}>
-                   
-                    <Select  className={classes.formControl}
-                    displayEmpty
-                              labelId="demo-simple-select-label"
-                              id="demo-simple-select"
-                              value={chooseStore}
-                              onChange={handleChooseStore}
-                              defaultValue='Geasoas'
-                            >
-                                {stores.map( (e) => {
-                                    if(e.nameStore!=='VIP'){
-                                      return <MenuItem key={e.id} value={e.id}>{e.nameStore + ' ' + e.addressStore}</MenuItem>
+                    <br></br>
+                    <br></br>
+                  </Grid>
+                  <Grid container spacing={3}>
+
+                    <Select className={classes.formControl}
+                    fullWidth
+                      displayEmpty
+                      labelId="demo-simple-select-label"
+                      id="demo-simple-select"
+                      value={chooseStore}
+                      onChange={handleChooseStore}
+                      defaultValue='Geasoas'
+                    >
+                      {stores.map((e) => {
+                        if (e.nameStore !== 'VIP') {
+                          return <MenuItem key={e.id} value={e.id}>{e.nameStore + ' ' + e.addressStore}</MenuItem>
 
 
-                                    }
-                                    else{
+                        }
+                        else {
 
-                                      return <MenuItem key={e.id} value={e.id}>{e.nameStore + ' ' + e.addressStore}</MenuItem>
-                                    }
-                                    
-                                        
-                                }
-                          
-                                )}
+                          return <MenuItem key={e.id} value={e.id}>{e.nameStore + ' ' + e.addressStore}</MenuItem>
+                        }
 
-                             
-                         
-                            </Select>
-                 
-                            </Grid>
-                 
-                    
-              
 
-                <Grid item xs={12} sm={6} lg={4}>
-                 
-                  <ToastContainer
-                    position="top-right"
-                    autoClose={2000}
-                    hideProgressBar
-                    newestOnTop
-                    closeOnClick
-                    rtl={false}
-                    pauseOnFocusLoss
-                    draggable
-                    pauseOnHover
-                  />
-                </Grid>
+                      }
 
-             </FormControl>
+                      )}
+
+
+
+                    </Select>
+
+                  </Grid>
+
+
+
+
+                  <Grid item xs={12} sm={6} lg={4}>
+
+                    <ToastContainer
+                      position="top-right"
+                      autoClose={2000}
+                      hideProgressBar
+                      newestOnTop
+                      closeOnClick
+                      rtl={false}
+                      pauseOnFocusLoss
+                      draggable
+                      pauseOnHover
+                    />
+                  </Grid>
+                </LocalizationProvider>
+              </FormControl>
             </Container>
 
 

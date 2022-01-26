@@ -142,7 +142,7 @@ export default function RegularMessage() {
 
 
 
-            , localStorage.getItem('jwt')).then(res => {
+            , sessionStorage.getItem('jwt')).then(res => {
                 if (res.status === 200) {
                     toast.success('🦄 Tạo nội dung tin nhắn thành công!', {
                         position: "top-right",
@@ -200,7 +200,7 @@ export default function RegularMessage() {
 
     function getRegularMessages() {
         axios.get(`${Config.API_URL}/regular-messages`, {
-            'headers': { 'Authorization': 'Bearer ' + localStorage.getItem('jwt') }
+            'headers': { 'Authorization': 'Bearer ' + sessionStorage.getItem('jwt') }
 
         }).then(res => {
             setRegularMessages(res.data)

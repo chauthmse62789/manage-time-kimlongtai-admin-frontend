@@ -95,7 +95,7 @@ const RegularMessageMoreMenu = (props) => {
 
   function deleteRegularMessageById(id) {
     handleCloseDelete();
-    CallAPI(`/notes/${id}`, 'DELETE', null, localStorage.getItem('jwt')).then(res => {
+    CallAPI(`/regular-messages/${id}`, 'DELETE', null, sessionStorage.getItem('jwt')).then(res => {
       console.log(res.data)
       if (res.status === 200) {
         toast.success('🦄 Xóa ghi chú thành công!', {
@@ -162,7 +162,7 @@ const RegularMessageMoreMenu = (props) => {
 
 
 
-      , localStorage.getItem('jwt')).then(res => {
+      , sessionStorage.getItem('jwt')).then(res => {
         if (res.status === 200) {
           toast.success('🦄 Cật nhật thành công', {
             position: "top-right",
@@ -217,7 +217,7 @@ const RegularMessageMoreMenu = (props) => {
 
   function getRegularMessageById(id) {
     setOpenEdit(true);
-    CallAPI(`/regular-messages/${id}`, 'GET', null, localStorage.getItem('jwt')).then(res => {
+    CallAPI(`/regular-messages/${id}`, 'GET', null, sessionStorage.getItem('jwt')).then(res => {
       setRegularMessage({
         contentMessage: res.data.contentMessage
       })

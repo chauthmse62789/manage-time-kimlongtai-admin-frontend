@@ -1,7 +1,7 @@
 import { Icon } from '@iconify/react';
 import { useRef, useState } from 'react';
 import editFill from '@iconify/icons-eva/edit-fill';
-import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router-dom';
 import trash2Outline from '@iconify/icons-eva/trash-2-outline';
 import moreVerticalFill from '@iconify/icons-eva/more-vertical-fill';
 import React from 'react';
@@ -36,7 +36,7 @@ const StoreMoreMenu = (props) => {
     nameStore: '',
     addressStore: ''
  });
-  const navigate = useNavigate();
+ 
   const ref = useRef(null);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -85,8 +85,8 @@ const StoreMoreMenu = (props) => {
 
   function deleteStoreById(id) {
     handleCloseDelete();
-    CallAPI(`/stores/${id}`, 'DELETE', null, localStorage.getItem('jwt')).then(res => {
-      console.log(res.data)
+    CallAPI(`/stores/${id}`, 'DELETE', null, sessionStorage.getItem('jwt')).then(res => {
+     
       if (res.status === 200) {
         toast.success('🦄 Xóa của hàng thành công', {
           position: "top-right",
@@ -119,7 +119,7 @@ const StoreMoreMenu = (props) => {
           draggable: true,
           progress: undefined,
         });
-        navigate('/dashboard/user', { replace: true });
+      
       }
       console.log(JSON.stringify(err));
     });
@@ -152,7 +152,7 @@ const StoreMoreMenu = (props) => {
 
 
 
-      , localStorage.getItem('jwt')).then(res => {
+      , sessionStorage.getItem('jwt')).then(res => {
         if (res.status === 200) {
           toast.success('🦄 Cật nhật thành công', {
             position: "top-right",
@@ -207,7 +207,7 @@ const StoreMoreMenu = (props) => {
 
   function getStoreById(id) {
     setOpenEdit(true);
-    CallAPI(`/stores/${id}`, 'GET', null, localStorage.getItem('jwt')).then(res => {
+    CallAPI(`/stores/${id}`, 'GET', null, sessionStorage.getItem('jwt')).then(res => {
       setStoreInput({
         nameStore: res.data.nameStore,
         addressStore: res.data.addressStore,     

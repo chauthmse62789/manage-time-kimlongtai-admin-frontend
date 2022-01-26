@@ -12,7 +12,11 @@ import {
   Container,
   Typography,
   TableContainer,
-  TablePagination
+  TablePagination,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem
 } from '@material-ui/core';
 // components
 import Page from '../components/Page';
@@ -25,15 +29,16 @@ import { ToastContainer } from 'react-toastify';
 import { filter } from 'lodash';
 import { Icon } from '@iconify/react';
 import { useState, useEffect } from 'react';
-import Select from '@material-ui/core/Select';
-import MenuItem from '@material-ui/core/MenuItem';
 import { TextField } from '@material-ui/core';
-import InputLabel from '@material-ui/core/InputLabel';
 import searchFill from '@iconify/icons-eva/search-fill';
 import refreshFill from '@iconify/icons-eva/refresh-fill';
 import { ExportCSVByMonths } from './../components/ExportCSVByMonths';
 import * as Config from '../constants/config'
 import Chip from '@material-ui/core/Chip';
+import AdapterDateFns from '@material-ui/lab/AdapterDateFns';
+import LocalizationProvider from '@material-ui/lab/LocalizationProvider';
+import viLocale from 'date-fns/locale/vi';
+import { MobileDatePicker } from '@material-ui/lab';
 
 const TABLE_HEAD = [
   { id: 'STT', label: 'STT', alignRight: false },
@@ -42,7 +47,8 @@ const TABLE_HEAD = [
   { id: 'statusEmployee', label: 'Tình Trạng Nhân Viên', alignRight: false },
   { id: 'fromDate', label: 'Từ Ngày', alignRight: false },
   { id: 'toDate', label: 'Đến Ngày', alignRight: false },
-  { id: 'numberOfBreaks', label: 'Tổng Số Lần Nghỉ Trong Ngày', alignRight: false },
+  { id: 'sumNumbersOfWorks', label: 'Số Ngày Làm Việc', alignRight: false },
+  { id: 'numberOfHoursBreaks', label: 'Tổng Số Giờ Nghỉ', alignRight: false },
   { id: 'Sum', label: 'Tổng Số Giờ Công', alignRight: false }
 
 
@@ -91,23 +97,20 @@ export default function ReportsByMonth() {
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
 
-  const [chooseFromDate, setChooseFromDate] = React.useState('');
-  const handleChooseFromDate = (event) => {
-    setChooseFromDate(event.target.value);
-  };
 
-
-  const [chooseToDate, setChooseToDate] = React.useState('');
-  const handleChooseToDate = (event) => {
-    setChooseToDate(event.target.value);
-  };
+  var dateNow = new Date();
+  var firstDay = new Date(dateNow.getFullYear(), dateNow.getMonth(), 2);
+  const [chooseFromDate, setChooseFromDate] = React.useState(firstDay - 1);
 
 
 
 
+  const [chooseToDate, setChooseToDate] = React.useState(new Date());
 
 
+  const [chooseUsernameFilter, setChooseUsernameFilter] = React.useState('');
 
+  
 
 
 
@@ -118,53 +121,65 @@ export default function ReportsByMonth() {
 
 
 
-  var arrayFilter = [];
+  const [arrayFilter, setArrayFilter] = useState([]);
   const [timecards, setTimecards] = useState([]);
   const [timecardsFilter, setTimecardsFilter] = useState([]);
 
+  const handleChangeChoooseUsername = (event) => {
+    setChooseUsernameFilter(event.target.value);
+  };
+
+  const [chooseStatusEmp, setChooseStatusEmp] = React.useState('false');
+  const handleChangeChooseStatusEmp = (event) => {
+    setChooseStatusEmp(event.target.value);
+   
+  };
 
 
 
-  const [employees, setEmployees] = useState([]);
+  // const [employees, setEmployees] = useState([]);
 
-  function getEmployees() {
-    axios.get(`${Config.API_URL}/users`, {
-      'headers': { 'Authorization': 'Bearer ' + localStorage.getItem('jwt') }
+  // function getEmployees() {
+  //   axios.get(`${Config.API_URL}/users`, {
+  //     'headers': { 'Authorization': 'Bearer ' + sessionStorage.getItem('jwt') }
+
+  //   }).then(res => {
+  //     setEmployees(res.data)
+  //     setFilterName('')
+  //   })
+
+
+  // }
+
+
+
+
+
+
+
+
+
+  // const [employeesTemp, setEmployeesTemp] = useState([]);
+
+  function getTimecards(toDate, fromDate, employee,chooseStatusEmp) {
+    setArrayFilter([])
+    axios.get(`${Config.API_URL}/time-cards?_limit=1000&_sort=date:DESC&_where[0][date_gte]=${toDate}&_where[1][date_lte]=${fromDate}&_where[2][users_permissions_user.username_contains]=${employee}`, {
+      'headers': { 'Authorization': 'Bearer ' + sessionStorage.getItem('jwt') }
 
     }).then(res => {
-      setEmployees(res.data)
-      setFilterName('')
-    })
-
-
-  }
-
-
-
-
-
-
-
-
-
- // const [employeesTemp, setEmployeesTemp] = useState([]);
-
-  function getTimecards(toDate, fromDate, employee) {
-    axios.get(`${Config.API_URL}/time-cards?_sort=id:ASC&_where[0][date_gte]=${toDate}&_where[1][date_lte]=${fromDate}&_where[2][users_permissions_user.username_contains]=${employee}`, {
-      'headers': { 'Authorization': 'Bearer ' + localStorage.getItem('jwt') }
-
-    }).then(res => {
+      
       setTimecards(res.data)
-     
     })
-    
-    handleTimecards(toDate,fromDate);
+
+    handleTimecards(toDate, fromDate,chooseStatusEmp);
   }
 
 
 
- 
-  function handleTimecards(toDate,fromDate) {
+
+
+
+  function handleTimecards(toDate, fromDate,chooseStatusEmp) {
     var arrayEmployeeInTimeCard = [];
     timecards.map(item => {
       return arrayEmployeeInTimeCard.push(item.users_permissions_user.username)
@@ -174,24 +189,31 @@ export default function ReportsByMonth() {
     }).map(emp => {
       var sumNumberOfBreaks = 0;
       var sumAllTimeWork = 0;
-
+      var sumAllTimeBreaks = 0;
+      var sumNumberOfWorks = 0;
       var obj;
       timecards.map((tc, id = 0) => {
-
+         
         if (tc.users_permissions_user.username === emp) {
           sumNumberOfBreaks = sumNumberOfBreaks + tc.numberOfBreaks;
-          sumAllTimeWork = sumAllTimeWork + calculateSumWorkingTime(tc.beginTime, tc.breaktime, tc.doneBreaktime, tc.breaktime2, tc.doneBreaktime2, tc.breaktime3, tc.doneBreaktime3, tc.breaktime4, tc.doneBreaktime4, tc.endTime);
+          sumNumberOfWorks=sumNumberOfWorks+1;
+          sumAllTimeWork = sumAllTimeWork + calculateSumWorkingTime(tc.date, tc.beginTime, tc.breaktime, tc.doneBreaktime, tc.breaktime2, tc.doneBreaktime2, tc.breaktime3, tc.doneBreaktime3, tc.breaktime4, tc.doneBreaktime4, tc.endTime);
+          sumAllTimeBreaks = sumAllTimeBreaks + calculateSumBreakingTime(tc.breaktime, tc.doneBreaktime, tc.breaktime2, tc.doneBreaktime2, tc.breaktime3, tc.doneBreaktime3, tc.breaktime4, tc.doneBreaktime4);
+
+           
           obj = {
             id: ++id,
-            fromDate:fromDate,
-            toDate:toDate,
+            fromDate: fromDate,
+            toDate: toDate,
             numberOfBreaks: sumNumberOfBreaks,
+            sumAllTimeBreaks: sumAllTimeBreaks,
             sumAllTimeWork: sumAllTimeWork,
+            sumNumberOfWorks:sumNumberOfWorks,
             users_permissions_user: {
               firstName: tc.users_permissions_user.firstName,
               lastName: tc.users_permissions_user.lastName,
               username: tc.users_permissions_user.username,
-              blocked:tc.users_permissions_user.blocked
+              blocked: tc.users_permissions_user.blocked
             }
           }
         }
@@ -199,17 +221,38 @@ export default function ReportsByMonth() {
       })
       return arrayFilter.push(obj)
     })
-    setTimecardsFilter(arrayFilter);
+   
+ 
+
+      var tempChooseActive = arrayFilter.filter(
+        row=>row.users_permissions_user.blocked === false
+        ); // Filter User Active
+
+        
+        
+      var tempChooseDeActive = arrayFilter.filter(
+        row => row.users_permissions_user.blocked === true
+
+      );//// Filter User Deactive
+    
+
+        
+        chooseStatusEmp === false ? setTimecardsFilter(tempChooseActive) : setTimecardsFilter(tempChooseDeActive)
+    
   }
 
   useEffect(() => {
-    getEmployees();
+
   }, []);
 
 
 
 
-  const calculateSumWorkingTime = (begin, breaktime, doneBreaktime, breaktime2, doneBreaktime2, breaktime3, doneBreaktime3, breaktime4, doneBreaktime4, endtime) => {
+  const calculateSumWorkingTime = (date, begin, breaktime, doneBreaktime, breaktime2, doneBreaktime2, breaktime3, doneBreaktime3, breaktime4, doneBreaktime4, endtime) => {
+
+    //Date in TimeCard
+
+    var justDateInTimecard = new Date(date);
 
 
 
@@ -290,12 +333,33 @@ export default function ReportsByMonth() {
 
 
     // Endtime
+    var dateEndTime = new Date(endtime);
+    var justDateInEndTimecard = dateEndTime;
 
-    var hoursEndtime = parseInt(endtime.slice(0, 2));
-    var minsEndtime = parseInt(endtime.slice(3, 5));
-    var convertEndtimeAllMins = hoursEndtime * 60 + minsEndtime;
+    var timeEndTime = dateEndTime.toLocaleTimeString('vi-VN');
+
+    var hoursEndtime = parseInt(timeEndTime.slice(0, 2));
+    var minsEndtime = parseInt(timeEndTime.slice(3, 5));
+    var convertEndtimeAllMins = null
 
 
+
+
+    var justEndDate = new Date(justDateInEndTimecard);
+    var justDate = new Date(justDateInTimecard);
+
+
+
+
+
+    if (parseInt(justDate.getDate()) !== parseInt(justEndDate.getDate())) {
+
+      convertEndtimeAllMins = hoursEndtime * 60 + minsEndtime + 1 * 24 * 60;
+
+    }
+    else {
+      convertEndtimeAllMins = hoursEndtime * 60 + minsEndtime;
+    }
 
 
 
@@ -306,10 +370,107 @@ export default function ReportsByMonth() {
     var customMins = sumAllMins % 60
     var converMinsToHours = customMins / 60
 
+    var result = customHours + converMinsToHours
+
+    return result;
+
+
+  }
+
+
+
+
+
+
+  const calculateSumBreakingTime = (breaktime, doneBreaktime, breaktime2, doneBreaktime2, breaktime3, doneBreaktime3, breaktime4, doneBreaktime4) => {
+
+
+
+
+
+
+    // Breaktime - DoneBreaktime
+    var hoursBreaktime = parseInt(breaktime.slice(0, 2));
+    var minsBreaktime = parseInt(breaktime.slice(3, 5));
+    var convertBreaktimeAllMins = hoursBreaktime * 60 + minsBreaktime;
+
+
+
+
+
+
+
+    var hoursDoneBreaktime = parseInt(doneBreaktime.slice(0, 2));
+    var minsDoneBreaktime = parseInt(doneBreaktime.slice(3, 5));
+    var convertDoneBreaktime = hoursDoneBreaktime * 60 + minsDoneBreaktime;
+
+
+
+
+    // Breaktime2 - DoneBreaktime2
+
+
+    var hoursBreaktime2 = parseInt(breaktime2.slice(0, 2));
+    var minsBreaktime2 = parseInt(breaktime2.slice(3, 5));
+    var convertBreaktime2AllMins = hoursBreaktime2 * 60 + minsBreaktime2;
+
+
+
+
+    var hoursDoneBreaktime2 = parseInt(doneBreaktime2.slice(0, 2));
+    var minsDoneBreaktime2 = parseInt(doneBreaktime2.slice(3, 5));
+    var convertDoneBreaktime2 = hoursDoneBreaktime2 * 60 + minsDoneBreaktime2;
+
+
+    // Breaktime3 - DoneBreaktime3
+
+
+    var hoursBreaktime3 = parseInt(breaktime3.slice(0, 2));
+    var minsBreaktime3 = parseInt(breaktime3.slice(3, 5));
+    var convertBreaktime3AllMins = hoursBreaktime3 * 60 + minsBreaktime3;
+
+
+
+
+    var hoursDoneBreaktime3 = parseInt(doneBreaktime3.slice(0, 2));
+    var minsDoneBreaktime3 = parseInt(doneBreaktime3.slice(3, 5));
+    var convertDoneBreaktime3 = hoursDoneBreaktime3 * 60 + minsDoneBreaktime3;
+
+
+
+    // Breaktime4 - DoneBreaktime4
+
+
+    var hoursBreaktime4 = parseInt(breaktime4.slice(0, 2));
+    var minsBreaktime4 = parseInt(breaktime4.slice(3, 5));
+    var convertBreaktime4AllMins = hoursBreaktime4 * 60 + minsBreaktime4;
+
+
+
+
+    var hoursDoneBreaktime4 = parseInt(doneBreaktime4.slice(0, 2));
+    var minsDoneBreaktime4 = parseInt(doneBreaktime4.slice(3, 5));
+    var convertDoneBreaktime4 = hoursDoneBreaktime4 * 60 + minsDoneBreaktime4;
+
+
+
+
+
+
+
+
+    var sumAllMins = (convertDoneBreaktime - convertBreaktimeAllMins) + (convertDoneBreaktime2 - convertBreaktime2AllMins) + (convertDoneBreaktime3 - convertBreaktime3AllMins) + (convertDoneBreaktime4 - convertBreaktime4AllMins);
+
+    var customHours = Math.floor(sumAllMins / 60);
+    var customMins = sumAllMins % 60
+    var converMinsToHours = customMins / 60
+
 
     var result = customHours + converMinsToHours
 
     return result;
+
+
 
 
   }
@@ -367,6 +528,7 @@ export default function ReportsByMonth() {
 
   const filteredUsers = applySortFilter(timecardsFilter, getComparator(order, orderBy), filterName);
 
+
   const isUserNotFound = filteredUsers.length === 0;
 
 
@@ -374,10 +536,10 @@ export default function ReportsByMonth() {
 
 
 
-  const [chooseEmployee, setChooseEmployee] = React.useState('');
-  const handleChooseEmployee = (event) => {
-    setChooseEmployee(event.target.value);
-  };
+  // const [chooseEmployee, setChooseEmployee] = React.useState('');
+  // const handleChooseEmployee = (event) => {
+  //   setChooseEmployee(event.target.value);
+  // };
 
 
 
@@ -402,9 +564,9 @@ export default function ReportsByMonth() {
 
 
   const handleRefresuReport = () => {
-    setChooseToDate('');
-    setChooseFromDate('');
-    setChooseEmployee('')
+    setChooseToDate(new Date());
+    setChooseFromDate('1970-1-1');
+    setChooseUsernameFilter('')
 
 
 
@@ -423,7 +585,12 @@ export default function ReportsByMonth() {
   }
 
 
+  const formatDateFrame = (date) => {
+    var d = new Date(date);
+    var n = d.toLocaleDateString("vi-VN");
 
+    return n
+  }
 
   return (
     <Page title="Báo Cáo Tháng |  Kim Long Tài">
@@ -450,49 +617,80 @@ export default function ReportsByMonth() {
         <Card>
 
           <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5} mt={5} ml={2} mr={2}>
-
-            <TextField
-              style={{ width: '250px', height: 55 }}
-              fullWidth
-              id="date"
-              label="Từ ngày"
-              type="date"
-              value={chooseFromDate}
-              onChange={handleChooseFromDate}
-
-              InputLabelProps={{
-                shrink: true,
-              }}
-
-            />
+            <LocalizationProvider dateAdapter={AdapterDateFns} locale={viLocale}>
 
 
 
-            <TextField
-              style={{ width: '250px', height: 55 }}
-              fullWidth
-              id="date"
-              label="Đến ngày"
-              type="date"
-              value={chooseToDate}
-              onChange={handleChooseToDate}
+              <MobileDatePicker
+                label="Từ Ngày"
+                value={chooseFromDate}
+                onChange={(newValue) => {
+                  setChooseFromDate(newValue);
+                }}
+                renderInput={(params) => <TextField style={{ margin: '5px' }} fullWidth {...params} />}
+              />
 
-              InputLabelProps={{
-                shrink: true,
-              }}
 
-            />
+
+            </LocalizationProvider>
+
+
+
+
+
+
+
+            <LocalizationProvider dateAdapter={AdapterDateFns} locale={viLocale}>
+
+
+
+              <MobileDatePicker
+                label="Đến Ngày"
+                value={chooseToDate}
+                onChange={(newValue) => {
+                  setChooseToDate(newValue);
+                }}
+                renderInput={(params) => <TextField style={{ margin: '5px' }} fullWidth {...params} />}
+              />
+
+
+
+            </LocalizationProvider>
+
+
+
+            <TextField fullWidth style={{ margin: '5px' }} id="outlined-basic" label="Mã nhân viên" variant="outlined" value={chooseUsernameFilter} onChange={handleChangeChoooseUsername} />
+
+            <FormControl fullWidth>
+
+
+              <InputLabel id="demo-simple-select-label">Tình Trạng Làm Việc</InputLabel>
+              <Select
+                labelId="demo-simple-select-label"
+                id="demo-simple-select"
+                value={chooseStatusEmp}
+                label="Tình Trạng Làm Việc"
+                onChange={handleChangeChooseStatusEmp}
+              >
+                <MenuItem defaultValue key='0' value='false'>Còn hiệu lực</MenuItem>
+                <MenuItem key='1' value='true'>Tạm khóa</MenuItem>
+
+
+              </Select>
+
+            </FormControl>
+
+            {/* <FormControl fullWidth>
             <InputLabel id="demo-customized-select">Nhân viên</InputLabel>
             <Select fullWidth
 
-              style={{ width: '250px', height: 55 }}
               value={chooseEmployee}
               onChange={handleChooseEmployee}
             >
               <MenuItem key='0' value=''>Tất cả</MenuItem>
               {employees.map((e) => {
                 if (e.nameStore !== 'VIP') {
-                  
+
                   return <MenuItem key={e.id} value={e.username}>{e.username + ' ' + e.firstName}</MenuItem>
 
 
@@ -503,12 +701,12 @@ export default function ReportsByMonth() {
 
 
             </Select>
+</FormControl> */}
 
 
 
-
-            <Button onClick={() => getTimecards(chooseFromDate, chooseToDate, chooseEmployee)}
-              style={{ height: 55 }}
+            <Button onClick={() => getTimecards(new Date(chooseFromDate).toISOString().slice(0, 10), new Date(chooseToDate).toISOString().slice(0, 10), chooseUsernameFilter,chooseStatusEmp ==='false' ? false : true)}
+              style={{ height: 55, margin: '5px' }}
               variant="contained"
               component={RouterLink}
               to="#"
@@ -517,7 +715,7 @@ export default function ReportsByMonth() {
               Tìm
             </Button>
             <Button onClick={handleRefresuReport}
-              style={{ height: 55 }}
+              style={{ height: 55, margin: '5px' }}
               variant="contained"
               component={RouterLink}
               to="#"
@@ -544,7 +742,7 @@ export default function ReportsByMonth() {
                   {filteredUsers
                     .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                     .map((row, stt = 0) => {
-                      const { id, users_permissions_user, numberOfBreaks, sumAllTimeWork,fromDate,toDate } = row;
+                      const { id, users_permissions_user,sumNumberOfWorks, sumAllTimeBreaks, sumAllTimeWork, fromDate, toDate } = row;
                       const isItemSelected = selected.indexOf(id) !== -1;
 
                       return (
@@ -564,14 +762,17 @@ export default function ReportsByMonth() {
                           </TableCell> */}
                           <TableCell align="left">{++stt}</TableCell>
                           <TableCell align="left">{users_permissions_user.lastName + ' ' + users_permissions_user.firstName}</TableCell>
-                           <TableCell align="left">{users_permissions_user.username}</TableCell>
-                           <TableCell align="left">{users_permissions_user.blocked===false ?  <Chip size="small" color="primary" label="Còn Hiệu Lực" /> :<Chip color="secondary" size="small" label="Đã Khóa" />}</TableCell>
-                        
-                          <TableCell align="left">{fromDate}</TableCell>
-                          <TableCell align="left">{toDate}</TableCell>
+                          <TableCell align="left">{users_permissions_user.username}</TableCell>
+                          <TableCell align="left">{users_permissions_user.blocked === false ? <Chip size="small" color="primary" label="Còn Hiệu Lực" /> : <Chip color="secondary" size="small" label="Đã Khóa" />}</TableCell>
+                          <TableCell align="left">{formatDateFrame(toDate)}</TableCell>
+                          <TableCell align="left">{formatDateFrame(fromDate)}</TableCell>
 
-                          <TableCell align="left">{numberOfBreaks}</TableCell>
-                          <TableCell align="left">{sumAllTimeWork}</TableCell>
+
+
+
+                          <TableCell align="left">{sumNumberOfWorks}</TableCell>
+                          <TableCell align="left">{parseFloat(sumAllTimeBreaks).toFixed(2)}</TableCell>
+                          <TableCell align="left">{parseFloat(sumAllTimeWork).toFixed(2)}</TableCell>
 
 
 

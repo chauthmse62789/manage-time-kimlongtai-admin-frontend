@@ -21,7 +21,10 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Grid, Container } from '@material-ui/core';
 import { TextField } from '@material-ui/core';
-
+import { MobileDateTimePicker } from '@material-ui/lab';
+import AdapterDateFns from '@material-ui/lab/AdapterDateFns';
+import LocalizationProvider from '@material-ui/lab/LocalizationProvider';
+import viLocale from 'date-fns/locale/vi';
 // ----------------------------------------------------------------------
 
 
@@ -33,8 +36,8 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 
 const NoteMoreMenu = (props) => {
 
-  const [stateDatetime, setStateDatetime] = React.useState();
-  const [chooseDatetime, setChooseDatetime] = React.useState(stateDatetime);
+  
+  
   
 
   const [note, setNote] = useState({
@@ -74,56 +77,14 @@ const NoteMoreMenu = (props) => {
 
     
     getNotebyId(id);
-    converDateTimeFormat(note.date)
+  
   };
 
-  function converDateTimeFormat(dateTime){
-
-
-    var d = new Date(dateTime);
-    var date = d.getDate();
-    var month = d.getMonth() + 1;
-    var year = d.getFullYear();
-    var hours = d.getHours();
-    var mins = d.getMinutes();
-
-    if (date.toString().length === 1) {
-      date = '0' + date
-    }
-
-    if (month.toString().length === 1) {
-      month = '0' + month
-
-    }
-
-
-    if (hours.toString().length === 1) {
-      hours = '0' + hours
-
-    }
-
-    if (mins.toString().length === 1) {
-      mins = '0' + mins
-
-    }
-
-    var result = year + '-' + month + '-' + date + 'T' + hours + ':' + mins;
-    
-    setStateDatetime(result);
   
-
-
-
-    //    2017-05-24T10:30
-
-  }
  
 
 
   
-  const handleChooseDatetime = (event) => {
-    setChooseDatetime(event.target.value);
-  };
 
   const handleCloseEdit = () => {
 
@@ -141,8 +102,8 @@ const NoteMoreMenu = (props) => {
 
   function deleteNoteById(id) {
     handleCloseDelete();
-    CallAPI(`/notes/${id}`, 'DELETE', null, localStorage.getItem('jwt')).then(res => {
-      console.log(res.data)
+    CallAPI(`/notes/${id}`, 'DELETE', null, sessionStorage.getItem('jwt')).then(res => {
+      
       if (res.status === 200) {
         toast.success('🦄 Xóa ghi chú thành công!', {
           position: "top-right",
@@ -204,13 +165,13 @@ const NoteMoreMenu = (props) => {
     CallAPI(`/notes/${props.idNotes}`, 'PUT',
       {
         "description": note.description,
-        "date": chooseDatetime,
+        "date": note.date,
         "users_permissions_user": note.users_permissions_user,
       }
 
 
 
-      , localStorage.getItem('jwt')).then(res => {
+      , sessionStorage.getItem('jwt')).then(res => {
         if (res.status === 200) {
           toast.success('🦄 Cật nhật thành công', {
             position: "top-right",
@@ -265,7 +226,7 @@ const NoteMoreMenu = (props) => {
 
   function getNotebyId(id) {
     setOpenEdit(true);
-    CallAPI(`/notes/${id}`, 'GET', null, localStorage.getItem('jwt')).then(res => {
+    CallAPI(`/notes/${id}`, 'GET', null, sessionStorage.getItem('jwt')).then(res => {
       setNote({
         description: res.data.description,
         users_permissions_user: res.data.users_permissions_user,
@@ -330,6 +291,7 @@ const NoteMoreMenu = (props) => {
           </ListItemIcon>
           <ListItemText primary="Delete" primaryTypographyProps={{ variant: 'body2' }} />
         </MenuItem>
+        
         <Dialog
           open={open}
           TransitionComponent={Transition}
@@ -386,6 +348,7 @@ const NoteMoreMenu = (props) => {
             </DialogContentText>
             <Container maxWidth="xl">
               <FormControl>
+              <LocalizationProvider dateAdapter={AdapterDateFns} locale={viLocale}>
                 <Grid container spacing={3}>
 
 
@@ -396,22 +359,19 @@ const NoteMoreMenu = (props) => {
                   </Grid>
 
                   <Grid item xs={12} md={12} lg={12}>
-                    <br></br>
                    
-                    <TextField
-                      fullWidth
-                      id="datetime-local"
-                      label="Chọn Ngày/Thời gian chỉnh sửa"
-                      type="datetime-local"
-                      defaultValue={stateDatetime}
-                      value={chooseDatetime}
-                      onChange={handleChooseDatetime}
-                      
-                      InputLabelProps={{
-                        shrink: true,
+                    <MobileDateTimePicker
+                      label='Chọn Ngày/Thời gian'
+                      value={note.date}
+                      onChange={(newValue) => {
+                        setNote({...note,date:newValue});
                       }}
-
+                      renderInput={(params) => <TextField fullWidth  {...params} />}
                     />
+                   
+
+
+
 
                   </Grid>
 
@@ -433,7 +393,7 @@ const NoteMoreMenu = (props) => {
                     pauseOnHover
                   />
                 </Grid>
-
+</LocalizationProvider>
               </FormControl>
             </Container>
 

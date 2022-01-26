@@ -40,6 +40,7 @@ export default function AccountPopover() {
   };
 
   function logoutAccount(){
+      sessionStorage.removeItem('jwt');
       localStorage.removeItem('jwt');
     window.location.reload()
 
@@ -111,7 +112,7 @@ export default function AccountPopover() {
 
         <Box sx={{ p: 2, pt: 1.5 }}>
           <Button onClick={logoutAccount} fullWidth color="inherit" variant="outlined">
-            Logout
+            Đăng Xuất
           </Button>
         </Box>
       </MenuPopover>

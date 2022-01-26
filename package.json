@@ -36,6 +36,7 @@
     ]
   },
   "dependencies": {
+    "@date-io/date-fns": "^2.11.0",
     "@emotion/react": "^11.4.0",
     "@emotion/styled": "^11.3.0",
     "@hookform/resolvers": "^2.6.1",
@@ -48,6 +49,7 @@
     "@material-ui/lab": "^5.0.0-alpha.38",
     "@material-ui/styles": "^5.0.0-alpha.36",
     "@material-ui/utils": "^5.0.0-alpha.36",
+    "@mui/lab": "^5.0.0-alpha.47",
     "@testing-library/jest-dom": "^5.14.1",
     "apexcharts": "^3.27.1",
     "axios": "^0.21.1",

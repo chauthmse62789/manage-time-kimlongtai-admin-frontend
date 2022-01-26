@@ -20,7 +20,7 @@ function Profile() {
   const [user, setUser] = useState({ id: '', username: '', phone: '', email: '', firstName: '', lastName: '', role: '' });
   useEffect(() => {
     async function getUser() {
-      CallAPI('/users/me', 'GET', null, localStorage.getItem('jwt')).then(res => {
+      CallAPI('/users/me', 'GET', null, sessionStorage.getItem('jwt')).then(res => {
         setUser({
           username: res.data.username,
           phone: res.data.phone,
@@ -74,7 +74,7 @@ function Profile() {
 
 
 
-      , localStorage.getItem('jwt')).then(res => {
+      , sessionStorage.getItem('jwt')).then(res => {
         if(res.status===200){
           toast.success('🦄 Cật nhật thành công', {
             position: "top-right",

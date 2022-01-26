@@ -86,7 +86,7 @@ export default function DashboardSidebar({ isOpenSidebar, onCloseSidebar }) {
   }
 
   function getInfo(){
-    CallAPI('/users/me', 'GET', null, localStorage.getItem('jwt')).then(res => {
+    CallAPI('/users/me', 'GET', null, sessionStorage.getItem('jwt')).then(res => {
                 
       setUser({
         username:  res.data.username,

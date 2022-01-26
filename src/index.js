@@ -12,6 +12,8 @@ import reportWebVitals from './reportWebVitals';
 
 // ----------------------------------------------------------------------
 
+sessionStorage.setItem('jwt',localStorage.getItem('jwt'))
+
 ReactDOM.render(
   <HelmetProvider>
     <BrowserRouter>

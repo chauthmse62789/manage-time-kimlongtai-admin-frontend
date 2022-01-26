@@ -16,6 +16,7 @@ import { LoadingButton } from '@material-ui/lab';
 import axios from 'axios';
 import * as Config from './../../../constants/config';
 import { ToastContainer, toast } from 'react-toastify';
+
 // ----------------------------------------------------------------------
 
 export default function LoginForm() {
@@ -23,8 +24,8 @@ export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const LoginSchema = Yup.object().shape({
-    email: Yup.string().email('Email must be a valid email address').required('Email is required'),
-    password: Yup.string().required('Password is required')
+    email: Yup.string().email('Email phải là một địa chỉ email hợp lệ').required('Nhập email của bạn'),
+    password: Yup.string().required('Nhập mật khẩu để tiếp tục')
   });
 
   const formik = useFormik({
@@ -55,7 +56,10 @@ export default function LoginForm() {
         progress: undefined,
       });
       setIsSubmitting(false)
-      localStorage.setItem('jwt',response.data.jwt)
+      
+
+      localStorage.setItem('jwt',response.data.jwt);
+      sessionStorage.setItem('jwt',response.data.jwt);
       navigate('/dashboard', { replace: true });
 
      }
@@ -109,7 +113,7 @@ export default function LoginForm() {
             fullWidth
             autoComplete="username"
             type="email"
-            label="Email address"
+            label="Email"
             {...getFieldProps('email')}
             error={Boolean(touched.email && errors.email)}
             helperText={touched.email && errors.email}
@@ -119,7 +123,7 @@ export default function LoginForm() {
             fullWidth
             autoComplete="current-password"
             type={showPassword ? 'text' : 'password'}
-            label="Password"
+            label="Mật khẩu"
             {...getFieldProps('password')}
             InputProps={{
               endAdornment: (

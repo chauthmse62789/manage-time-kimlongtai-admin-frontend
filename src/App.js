@@ -9,9 +9,12 @@ import ScrollToTop from './components/ScrollToTop';
 
 export default function App() {
   return (
+
+
     <ThemeConfig>
       <ScrollToTop />
       <Router />
     </ThemeConfig>
+  
   );
 }

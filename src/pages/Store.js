@@ -139,7 +139,7 @@ export default function Store() {
   
   
   
-        , localStorage.getItem('jwt')).then(res => {
+        , sessionStorage.getItem('jwt')).then(res => {
           if (res.status === 200) {
             toast.success('🦄 Tạo cửa hàng thành công!', {
               position: "top-right",
@@ -197,7 +197,7 @@ export default function Store() {
 
   function getStores(){
     axios.get(`${Config.API_URL}/stores`,{
-      'headers': {'Authorization': 'Bearer ' + localStorage.getItem('jwt')}
+      'headers': {'Authorization': 'Bearer ' + sessionStorage.getItem('jwt')}
 
     }).then(res=>{
         setStores(res.data)

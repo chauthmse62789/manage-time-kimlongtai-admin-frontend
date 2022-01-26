@@ -24,7 +24,11 @@ import { Grid, Container } from '@material-ui/core';
 import { TextField } from '@material-ui/core';
 import { makeStyles } from '@material-ui/styles';
 import * as Config from './../../../constants/config';
-
+import { MobileDateTimePicker } from '@material-ui/lab';
+import AdapterDateFns from '@material-ui/lab/AdapterDateFns';
+import LocalizationProvider from '@material-ui/lab/LocalizationProvider';
+import viLocale from 'date-fns/locale/vi';
+import { MobileDatePicker } from '@material-ui/lab';
 
 
 // ----------------------------------------------------------------------
@@ -81,7 +85,7 @@ const TimecardMoreMenu = (props) => {
 
   function getStatusWork() {
     axios.get(`${Config.API_URL}/status-works`, {
-      'headers': { 'Authorization': 'Bearer ' + localStorage.getItem('jwt') }
+      'headers': { 'Authorization': 'Bearer ' + sessionStorage.getItem('jwt') }
 
     }).then(res => {
       setStatusWork(res.data)
@@ -135,7 +139,7 @@ const TimecardMoreMenu = (props) => {
 
   function deleteTimecardById(id) {
     handleCloseDelete();
-    CallAPI(`/time-cards/${id}`, 'DELETE', null, localStorage.getItem('jwt')).then(res => {
+    CallAPI(`/time-cards/${id}`, 'DELETE', null, sessionStorage.getItem('jwt')).then(res => {
       if (res.status === 200) {
         toast.success('🦄 Xóa thẻ thời gian thành công!', {
           position: "top-right",
@@ -210,14 +214,14 @@ const TimecardMoreMenu = (props) => {
         "breaktime4": timecard.breaktime4 + ":00",
         "doneBreaktime4": timecard.doneBreaktime4 + ":00",
         "numberOfBreaks": numberOfBreaks,
-        "endTime": timecard.endTime + ":00",
+        "endTime": timecard.endTime,
         "date": timecard.date,
         "users_permissions_user": props.idUser,
       }
 
 
 
-      , localStorage.getItem('jwt')).then(res => {
+      , sessionStorage.getItem('jwt')).then(res => {
         if (res.status === 200) {
           toast.success('🦄 Cật nhật thành công', {
             position: "top-right",
@@ -272,7 +276,7 @@ const TimecardMoreMenu = (props) => {
 
   function getTimecardById(id) {
     setOpenEdit(true);
-    CallAPI(`/time-cards/${id}`, 'GET', null, localStorage.getItem('jwt')).then(res => {
+    CallAPI(`/time-cards/${id}`, 'GET', null, sessionStorage.getItem('jwt')).then(res => {
       setTimecard({
         beginTime: res.data.beginTime.slice(0, 5),
         breaktime: res.data.breaktime.slice(0, 5),
@@ -284,7 +288,7 @@ const TimecardMoreMenu = (props) => {
         breaktime4: res.data.breaktime4.slice(0, 5),
         doneBreaktime4: res.data.doneBreaktime4.slice(0, 5),
         numberOfBreaks: res.data.numberOfBreaks,
-        endTime: res.data.endTime.slice(0, 5),
+        endTime: res.data.endTime,
         date: res.data.date
       })
 
@@ -402,16 +406,66 @@ const TimecardMoreMenu = (props) => {
             </DialogContentText>
             <Container maxWidth="xl">
               <form>
-                <Grid container spacing={3}>
+                <LocalizationProvider dateAdapter={AdapterDateFns} locale={viLocale}>
+                  <Grid container spacing={3}>
+                    <Grid item xs={12} sm={12} lg={12}>
+                      <br></br>
+
+                      <MobileDatePicker
+                        label='Ngày(*)'
+                        value={timecard.date}
+                        onChange={(newValue) => {
+                          setTimecard({ ...timecard, date: newValue });
+                        }}
+                        renderInput={(params) => <TextField fullWidth name="date" {...params} />}
+                      />
+                    </Grid>
+
+
+                  </Grid>
                   <Grid item xs={12} sm={12} lg={12}>
                     <br></br>
                     <TextField
                       fullWidth
-                      id="date"
-                      label="Ngày"
-                      type="date"
-                      name="date"
-                      value={timecard.date}
+                      id="datetime-local"
+                      label="Vào ca(*)"
+                      type="time"
+                      name="beginTime"
+                      value={timecard.beginTime}
+                      onChange={onChange}
+
+                      InputLabelProps={{
+                        shrink: true,
+                      }}
+
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={12} lg={12}>
+                    <br></br>
+                    <TextField
+                      fullWidth
+                      id="datetime-local"
+                      label="Nghỉ giữa giờ(*)"
+                      type="time"
+                      name="breaktime"
+                      value={timecard.breaktime}
+                      onChange={onChange}
+
+                      InputLabelProps={{
+                        shrink: true,
+                      }}
+
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={12} lg={12}>
+                    <br></br>
+                    <TextField
+                      fullWidth
+                      id="datetime-local"
+                      label="Nghỉ xong(*)"
+                      name="doneBreaktime"
+                      type="time"
+                      value={timecard.doneBreaktime}
                       onChange={onChange}
 
                       InputLabelProps={{
@@ -422,246 +476,193 @@ const TimecardMoreMenu = (props) => {
                   </Grid>
 
 
-                </Grid>
-                <Grid item xs={12} sm={12} lg={12}>
-                  <br></br>
-                  <TextField
-                    fullWidth
-                    id="datetime-local"
-                    label="Vào ca(*)"
-                    type="time"
-                    name="beginTime"
-                    value={timecard.beginTime}
-                    onChange={onChange}
 
-                    InputLabelProps={{
-                      shrink: true,
-                    }}
+                  <Grid item xs={12} sm={12} lg={12}>
+                    <br></br>
+                    <TextField
+                      fullWidth
+                      id="datetime-local"
+                      label="Nghỉ giữa giờ lần 2(*)"
+                      type="time"
+                      name="breaktime2"
+                      value={timecard.breaktime2}
+                      onChange={onChange}
 
-                  />
-                </Grid>
-                <Grid item xs={12} sm={12} lg={12}>
-                  <br></br>
-                  <TextField
-                    fullWidth
-                    id="datetime-local"
-                    label="Nghỉ giữa giờ(*)"
-                    type="time"
-                    name="breaktime"
-                    value={timecard.breaktime}
-                    onChange={onChange}
+                      InputLabelProps={{
+                        shrink: true,
+                      }}
 
-                    InputLabelProps={{
-                      shrink: true,
-                    }}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={12} lg={12}>
+                    <br></br>
+                    <TextField
+                      fullWidth
+                      id="datetime-local"
+                      label="Nghỉ xong lần 2(*)"
+                      name="doneBreaktime2"
+                      type="time"
+                      value={timecard.doneBreaktime2}
+                      onChange={onChange}
 
-                  />
-                </Grid>
-                <Grid item xs={12} sm={12} lg={12}>
-                  <br></br>
-                  <TextField
-                    fullWidth
-                    id="datetime-local"
-                    label="Nghỉ xong(*)"
-                    name="doneBreaktime"
-                    type="time"
-                    value={timecard.doneBreaktime}
-                    onChange={onChange}
+                      InputLabelProps={{
+                        shrink: true,
+                      }}
 
-                    InputLabelProps={{
-                      shrink: true,
-                    }}
-
-                  />
-                </Grid>
-
-
-
-                <Grid item xs={12} sm={12} lg={12}>
-                  <br></br>
-                  <TextField
-                    fullWidth
-                    id="datetime-local"
-                    label="Nghỉ giữa giờ lần 2(*)"
-                    type="time"
-                    name="breaktime2"
-                    value={timecard.breaktime2}
-                    onChange={onChange}
-
-                    InputLabelProps={{
-                      shrink: true,
-                    }}
-
-                  />
-                </Grid>
-                <Grid item xs={12} sm={12} lg={12}>
-                  <br></br>
-                  <TextField
-                    fullWidth
-                    id="datetime-local"
-                    label="Nghỉ xong lần 2(*)"
-                    name="doneBreaktime2"
-                    type="time"
-                    value={timecard.doneBreaktime2}
-                    onChange={onChange}
-
-                    InputLabelProps={{
-                      shrink: true,
-                    }}
-
-                  />
-                </Grid>
+                    />
+                  </Grid>
 
 
 
 
-                <Grid item xs={12} sm={12} lg={12}>
-                  <br></br>
-                  <TextField
-                    fullWidth
-                    id="datetime-local"
-                    label="Nghỉ giữa giờ lần 3(*)"
-                    type="time"
-                    name="breaktime3"
-                    value={timecard.breaktime3}
-                    onChange={onChange}
+                  <Grid item xs={12} sm={12} lg={12}>
+                    <br></br>
+                    <TextField
+                      fullWidth
+                      id="datetime-local"
+                      label="Nghỉ giữa giờ lần 3(*)"
+                      type="time"
+                      name="breaktime3"
+                      value={timecard.breaktime3}
+                      onChange={onChange}
 
-                    InputLabelProps={{
-                      shrink: true,
-                    }}
+                      InputLabelProps={{
+                        shrink: true,
+                      }}
 
-                  />
-                </Grid>
-                <Grid item xs={12} sm={12} lg={12}>
-                  <br></br>
-                  <TextField
-                    fullWidth
-                    id="datetime-local"
-                    label="Nghỉ xong lần 3(*)"
-                    name="doneBreaktime3"
-                    type="time"
-                    value={timecard.doneBreaktime3}
-                    onChange={onChange}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={12} lg={12}>
+                    <br></br>
+                    <TextField
+                      fullWidth
+                      id="datetime-local"
+                      label="Nghỉ xong lần 3(*)"
+                      name="doneBreaktime3"
+                      type="time"
+                      value={timecard.doneBreaktime3}
+                      onChange={onChange}
 
-                    InputLabelProps={{
-                      shrink: true,
-                    }}
+                      InputLabelProps={{
+                        shrink: true,
+                      }}
 
-                  />
-                </Grid>
+                    />
+                  </Grid>
 
 
-                <Grid item xs={12} sm={12} lg={12}>
-                  <br></br>
-                  <TextField
-                    fullWidth
-                    id="datetime-local"
-                    label="Nghỉ giữa giờ lần 4(*)"
-                    type="time"
-                    name="breaktime4"
-                    value={timecard.breaktime4}
-                    onChange={onChange}
+                  <Grid item xs={12} sm={12} lg={12}>
+                    <br></br>
+                    <TextField
+                      fullWidth
+                      id="datetime-local"
+                      label="Nghỉ giữa giờ lần 4(*)"
+                      type="time"
+                      name="breaktime4"
+                      value={timecard.breaktime4}
+                      onChange={onChange}
 
-                    InputLabelProps={{
-                      shrink: true,
-                    }}
+                      InputLabelProps={{
+                        shrink: true,
+                      }}
 
-                  />
-                </Grid>
-                <Grid item xs={12} sm={12} lg={12}>
-                  <br></br>
-                  <TextField
-                    fullWidth
-                    id="datetime-local"
-                    label="Nghỉ xong lần 4(*)"
-                    name="doneBreaktime4"
-                    type="time"
-                    value={timecard.doneBreaktime4}
-                    onChange={onChange}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={12} lg={12}>
+                    <br></br>
+                    <TextField
+                      fullWidth
+                      id="datetime-local"
+                      label="Nghỉ xong lần 4(*)"
+                      name="doneBreaktime4"
+                      type="time"
+                      value={timecard.doneBreaktime4}
+                      onChange={onChange}
 
-                    InputLabelProps={{
-                      shrink: true,
-                    }}
+                      InputLabelProps={{
+                        shrink: true,
+                      }}
 
-                  />
-                </Grid>
+                    />
+                  </Grid>
 
 
 
 
 
-                <Grid item xs={12} sm={12} lg={12}>
-                  <br></br>
-                  <TextField
-                    fullWidth
-                    id="datetime-local"
-                    label="Kết ca(*)"
-                    name="endTime"
-                    type="time"
-                    value={timecard.endTime}
-                    onChange={onChange}
-
-                    InputLabelProps={{
-                      shrink: true,
-                    }}
-
-                  />
-                </Grid>
-
-                <Grid item xs={12} sm={12} lg={12}>
-                <h4>Số lần nghỉ(*)</h4>
-                  <Select
-                    native
-                    value={numberOfBreaks}
-                    name="numberOfBreaks"
-                    onChange={handleNumberOfBreaks}
-                    inputProps={{
-                      name: 'age',
-                      id: 'filled-age-native-simple',
-                    }}
-                  >
-                   
-                    <option value={1}>1 lần</option>
-                    <option value={2}>2 lần</option>
-                    <option value={3}>3 lần</option>
-                    <option value={4}>4 lần</option>
-                  </Select>
+                  <Grid item xs={12} sm={12} lg={12}>
+                    <br></br>
 
 
-                </Grid>
+                    <MobileDateTimePicker
+                      label='Ngày giờ kết ca(*)'
+                      value={timecard.endTime}
+                      onChange={(newValue) => {
+                        setTimecard({ ...timecard, endTime: newValue });
+                      }}
+                      renderInput={(params) => <TextField fullWidth name="endTime" {...params} />}
+                    />
+
+
+                  </Grid>
+
+                  <Grid item xs={12} sm={12} lg={12}>
+                    <h4>Số lần nghỉ(*)</h4>
+                    <Select className={classes.formControl}
+                      displayEmpty
+                      labelId="demo-simple-select-label"
+                      id="demo-simple-select"
+                      name="numberOfBreaks"
+                      value={numberOfBreaks}
+                      onChange={handleNumberOfBreaks}
+                      defaultValue='Geasoas'
+                      fullWidth
+                    >
+              
+
+                      <MenuItem value={0}>Chưa nghỉ</MenuItem>
+                      <MenuItem value={1}>Nghỉ 1 lần</MenuItem>
+                      <MenuItem value={2}>Nghỉ 2 lần</MenuItem>
+                      <MenuItem value={3}>Nghỉ 3 lần</MenuItem>
+                      <MenuItem value={4}>Nghỉ 4 lần</MenuItem>
+                    </Select>
+
+
+                  </Grid>
 
 
 
 
 
 
-                <Grid item xs={12} md={12} lg={12}>
-                  <h4>Trạng thái(*)</h4>
-                  <Select className={classes.formControl}
-                    displayEmpty
-                    labelId="demo-simple-select-label"
-                    id="demo-simple-select"
-                    value={IdStatusWork}
-                    onChange={handleIdStatusWork}
-                    defaultValue='Geasoas'
-                  >
-                    {statusWork.map((e) => {
+                  <Grid item xs={12} md={12} lg={12}>
+                    <h4>Trạng thái(*)</h4>
+                    <Select className={classes.formControl}
+                      displayEmpty
+                      labelId="demo-simple-select-label"
+                      id="demo-simple-select"
+                      value={IdStatusWork}
+                      onChange={handleIdStatusWork}
+                      defaultValue='Geasoas'
+                      fullWidth
+                    >
+                      {statusWork.map((e) => {
 
-                      return <MenuItem key={e.id} value={e.id}>{e.nameStatusWork}</MenuItem>
-
-
-
-
-                    })}
+                        return <MenuItem key={e.id} value={e.id}>{e.nameStatusWork}</MenuItem>
 
 
 
-                  </Select>
+
+                      })}
 
 
-                </Grid>
+
+                    </Select>
 
 
+                  </Grid>
+
+                </LocalizationProvider>
               </form>
             </Container>
 

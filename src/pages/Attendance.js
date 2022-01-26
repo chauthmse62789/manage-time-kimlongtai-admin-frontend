@@ -42,7 +42,10 @@ import trash2Fill from '@iconify/icons-eva/trash-2-fill';
 import { useTime } from 'react-timer-hook';
 // import { filter } from 'lodash';
 // import SearchNotFound from './../components/SearchNotFound';
-
+import AdapterDateFns from '@material-ui/lab/AdapterDateFns';
+import LocalizationProvider from '@material-ui/lab/LocalizationProvider';
+import viLocale from 'date-fns/locale/vi';
+import { LoadingButton, MobileDatePicker } from '@material-ui/lab';
 import * as Config from '../constants/config'
 
 
@@ -63,7 +66,7 @@ const useRowStyles = makeStyles({
 // ----------------------------------------------------------------------
 
 
-const Row = (props,ref)=> {
+const Row = (props, ref) => {
   const { row } = props;
   const [open, setOpen] = React.useState(false);
 
@@ -73,13 +76,28 @@ const Row = (props,ref)=> {
 
   const formatDateFrame = (date) => {
     var d = new Date(date);
-    var n = d.toLocaleDateString();
+    var n = d.toLocaleDateString("vi-VN");
 
     return n
   }
 
 
 
+
+
+  const [isSubmittingDelete, setIsSubmittingDelete] = useState(false);
+  const [openCreateDeleteDateAttendance, setOpenCreateDeleteDateAttendance] = React.useState(false);
+
+  const handleClickOpenCreateDelete = () => {
+
+    setOpenCreateDeleteDateAttendance(true);
+
+  };
+
+  const handleCloseCreateDelete = () => {
+
+    setOpenCreateDeleteDateAttendance(false);
+  };
 
 
 
@@ -99,18 +117,17 @@ const Row = (props,ref)=> {
       statusCodeEmployee: '',
       store: '',
       storeName: '',
-
-
-
       role: ''
     });
+
+  
 
     const handleClickStatusChangeFalse = (id) => {
       CallAPI(`/attendances/${id}`, 'PUT',
         {
           "checkAttendance": false,
         }
-        , localStorage.getItem('jwt')).then(res => {
+        , sessionStorage.getItem('jwt')).then(res => {
           if (res.status === 200) {
             toast.success('🦄 Cật nhật thành công', {
               position: "top-right",
@@ -172,7 +189,7 @@ const Row = (props,ref)=> {
 
 
 
-        , localStorage.getItem('jwt')).then(res => {
+        , sessionStorage.getItem('jwt')).then(res => {
           if (res.status === 200) {
             toast.success('🦄 Cật nhật thành công', {
               position: "top-right",
@@ -227,7 +244,7 @@ const Row = (props,ref)=> {
 
     function getUserById() {
       axios.get(`${Config.API_URL}/users/${props.users_permissions_user}`, {
-        'headers': { 'Authorization': 'Bearer ' + localStorage.getItem('jwt') }
+        'headers': { 'Authorization': 'Bearer ' + sessionStorage.getItem('jwt') }
       }).then(res => {
         setUser({
           username: res.data.username,
@@ -246,10 +263,14 @@ const Row = (props,ref)=> {
     }
 
 
-    
 
-    getUserById();
 
+
+    useEffect(() => {
+      getUserById();
+
+
+    }, []);
 
 
     return (<TableRow key={props.id}>
@@ -258,9 +279,9 @@ const Row = (props,ref)=> {
         {user.username}
       </TableCell>
       <TableCell component="th" scope="row">
-        {user.lastName + ' '+ user.firstName}
+        {user.lastName + ' ' + user.firstName}
       </TableCell>
-    
+
       <TableCell component="th" scope="row">
         {user.store}
       </TableCell>
@@ -272,8 +293,8 @@ const Row = (props,ref)=> {
         {user.role.id === 3 ? <Chip label="Quản lý" /> : <Chip color="secondary" variant="outlined" label="Nhân Viên" />}
       </TableCell>
       <TableCell>{props.checkAttendance === true ? <Chip color="secondary" label="Đã điểm danh" onClick={() => handleClickStatusChangeFalse(props.id)} /> : <Chip color="primary" label="Chưa điểm danh" onClick={() => handleClickStatusChangeTrue(props.id)} />}</TableCell>
-     
-      
+
+
     </TableRow>)
 
 
@@ -281,9 +302,14 @@ const Row = (props,ref)=> {
 
 
 
-  function deleteDateAttendance(id){
-    CallAPI(`/date-attendances/${id}`, 'DELETE', null, localStorage.getItem('jwt')).then(res => {
-      console.log(res.data)
+  const deleteDateAttendance=(id)=> {
+
+    handleCloseCreateDelete();
+  
+    setIsSubmittingDelete(true);
+
+    CallAPI(`/date-attendances/${id}`, 'DELETE', null, sessionStorage.getItem('jwt')).then(res => {
+      setIsSubmittingDelete(false);
       if (res.status === 200) {
         toast.success('🦄 Xóa điểm danh theo ngày thành công! ', {
           position: "top-right",
@@ -294,16 +320,14 @@ const Row = (props,ref)=> {
           draggable: true,
           progress: undefined,
         });
-
       }
       setTimeout(() => {
         window.location.reload();
-
       }, 2000)
 
 
-      
-    
+
+
     }).catch(err => {
       console.log('inside catch block.');
       if (err.response) {
@@ -337,7 +361,7 @@ const Row = (props,ref)=> {
 
   }
 
-
+ 
   return (
 
     <React.Fragment>
@@ -352,15 +376,57 @@ const Row = (props,ref)=> {
         </TableCell>
 
         <TableCell component="th" scope="row">
-        <Button onClick={()=>deleteDateAttendance(row.id)}
+
+
+        {/* onClick={() => deleteDateAttendance(row.id)} */}
+           
+
+        <LoadingButton
+            onClick={handleClickOpenCreateDelete}
+           
+
+            loading={isSubmittingDelete}
             variant="outlined"
             component={RouterLink}
             to="#"
             startIcon={<Icon icon={trash2Fill} />}
             color='primary'
           >
-           Xóa danh sách điểm danh theo ngày
-          </Button>
+            Xóa danh sách điểm danh theo ngày
+          </LoadingButton>
+
+
+          <Dialog
+            open={openCreateDeleteDateAttendance}
+            TransitionComponent={Transition}
+            keepMounted
+            onClose={handleCloseCreateDelete}
+            aria-labelledby="alert-dialog-slide-title"
+            aria-describedby="alert-dialog-slide-description"
+          >
+            <DialogContent>
+
+              <DialogContentText id="alert-dialog-slide-description">
+                Bạn có chắc chắn muốn xóa ngày điểm danh này ?
+              </DialogContentText>
+
+              <Container maxWidth="800px">
+                
+              </Container>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={handleCloseCreateDelete} color="primary">
+                Hủy bỏ
+              </Button>
+              <Button onClick={()=>
+              deleteDateAttendance(row.id)} color="primary">
+                Xóa ngày điểm danh
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+
+          
         </TableCell>
 
       </TableRow>
@@ -376,7 +442,7 @@ const Row = (props,ref)=> {
                   <TableRow>
                     <TableCell>Mã NV</TableCell>
                     <TableCell>Họ Tên</TableCell>
-                  
+
                     <TableCell>Cửa hàng</TableCell>
                     <TableCell>Điện thoại</TableCell>
                     <TableCell>Chức vụ</TableCell>
@@ -431,22 +497,22 @@ const Row = (props,ref)=> {
 
 
 export default function Attendance() {
-  
-  const DateTimer=(props)=> {
+
+  const DateTimer = (props) => {
     const {
       seconds,
       minutes,
       hours,
       ampm,
-    } = useTime({ format: '24-hour'});
-  
+    } = useTime({ format: '24-hour' });
+
 
 
     return (
-      <div style={{textAlign: 'left',display:'none'}}>
-        <div style={{fontSize: '17px'}}>
-      Giờ Hệ Thống: <span>{hours}</span>:<span>{minutes}</span>:<span>{seconds}</span><span>{ampm}</span>
-      {(hours===4 && minutes===0)?createDateAttendanceAuto():''}
+      <div style={{ textAlign: 'left', display: 'none' }}>
+        <div style={{ fontSize: '17px' }}>
+          Giờ Hệ Thống: <span>{hours}</span>:<span>{minutes}</span>:<span>{seconds}</span><span>{ampm}</span>
+          {(hours === 4 && minutes === 0 && seconds === 0) ? createDateAttendanceAuto() : ''}
         </div>
       </div>
     );
@@ -462,17 +528,21 @@ export default function Attendance() {
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
 
-  
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
 
   const [rows, setRows] = useState([]);
   const [openCreateDateAttendance, setOpenCreateDateAttendance] = React.useState(false);
+
+
+
+
   const [chooseDatetime, setChooseDatetime] = React.useState('');
 
   function getDateFrame() {
-    axios.get(`${Config.API_URL}/date-attendances?_sort=date:DESC`, {
-      'headers': { 'Authorization': 'Bearer ' + localStorage.getItem('jwt') }
+    axios.get(`${Config.API_URL}/date-attendances?_limit=1&_sort=date:DESC`, {
+      'headers': { 'Authorization': 'Bearer ' + sessionStorage.getItem('jwt') }
 
     }).then(res => {
 
@@ -493,7 +563,7 @@ export default function Attendance() {
 
   function getEmployee() {
     axios.get(`${Config.API_URL}/users`, {
-      'headers': { 'Authorization': 'Bearer ' + localStorage.getItem('jwt') }
+      'headers': { 'Authorization': 'Bearer ' + sessionStorage.getItem('jwt') }
 
     }).then(res => {
 
@@ -534,9 +604,6 @@ export default function Attendance() {
 
 
 
-  const handleChooseDatetime = (event) => {
-    setChooseDatetime(event.target.value);
-  };
 
 
 
@@ -559,93 +626,111 @@ export default function Attendance() {
 
 
 
-
   
+
+
+
+
+
+
+
+
 
   const createDateAttendanceDialog = (e) => {
     e.preventDefault();
-    
     handleCloseCreate();
     createAttendance();
+    setIsSubmitting(true)
+    setTimeout(() => {
+      CallAPI('/date-attendances', 'POST',
+        {
+          "date": chooseDatetime,
+          "attendances": listIdArrayAttendance
+        }
 
-setTimeout(()=>{
-  CallAPI('/date-attendances', 'POST',
-  {
-    "date": chooseDatetime,
-    "attendances": listIdArrayAttendance
+
+
+
+        , sessionStorage.getItem('jwt')).then(res => {
+         
+          if (res.status === 200) {
+            setIsSubmitting(false)
+            toast.success('🦄 Tạo danh sách điểm danh ngày thành công!', {
+              position: "top-right",
+              autoClose: 2000,
+              hideProgressBar: true,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+              progress: undefined,
+            });
+
+          }
+
+
+
+
+
+        }).catch(err => {
+          
+          console.log('inside catch block.');
+          if (err.response) {
+
+            console.log(err.response.data);
+            console.log(err.response.status);
+            console.log(err.response.headers);
+            console.log(err.response.data.m);
+          } else if (err.request) {
+            console.log(err.request);
+          } else {
+            setIsSubmitting(false)
+
+
+            toast.error('Tạo danh sách điểm danh thất bại!', {
+              position: "top-right",
+              autoClose: 2000,
+              hideProgressBar: true,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+              progress: undefined,
+            });
+          }
+          console.log(JSON.stringify(err));
+        });
+      // window.location.reload();
+
+    }, 10000)
+
+
+
+
+
+
+
+
+
   }
 
 
 
 
-  , localStorage.getItem('jwt')).then(res => {
-    if (res.status === 200) {
-      toast.success('🦄 Tạo danh sách điểm danh ngày thành công!', {
-        position: "top-right",
-        autoClose: 2000,
-        hideProgressBar: true,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-      });
-
-    }
 
 
 
 
 
-  }).catch(err => {
-    console.log('inside catch block.');
-    if (err.response) {
-
-      console.log(err.response.data);
-      console.log(err.response.status);
-      console.log(err.response.headers);
-      console.log(err.response.data.m);
-    } else if (err.request) {
-      console.log(err.request);
-    } else {
-
-
-      toast.error('Tạo danh sách điểm danh thất bại!', {
-        position: "top-right",
-        autoClose: 2000,
-        hideProgressBar: true,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-      });
-    }
-    console.log(JSON.stringify(err));
-  });
- window.location.reload();
-
-},3000)
-
- 
-
-
-
-
-
-
-
-  }
-
-
-  const createAttendanceForUser=(id,data)=>{
+  const createAttendanceForUser = (id, data) => {
 
     CallAPI(`/users/${id}`, 'PUT',
-    {
-      "attendances": data
-    }
-    , localStorage.getItem('jwt')).then(res => {
- }).catch(err => {
-      
-    })
+      {
+        "attendances": data
+      }
+      , sessionStorage.getItem('jwt')).then(res => {
+      }).catch(err => {
+        console.log(err)
+
+      })
 
   }
 
@@ -660,25 +745,21 @@ setTimeout(()=>{
 
     listArray.map((item) => {
 
-      return  (CallAPI('/attendances', 'POST',
-      {
-        "users_permissions_user": item,
-        "checkAttendance": false,
-      }
-  
-  
-        , localStorage.getItem('jwt')).then(res => {
-          
-         if(res.status===200){
-          listIdArrayAttendance.push(res.data.id)
-          createAttendanceForUser(item,res.data.id)
+      return (CallAPI('/attendances', 'POST',
+        {
+          "users_permissions_user": item,
+          "checkAttendance": false
+        }
 
 
-         }
-  
-         
+        , sessionStorage.getItem('jwt')).then(res => {
 
-        
+          if (res.status === 200) {
+            listIdArrayAttendance.push(res.data.id)
+            createAttendanceForUser(item, res.data.id)
+
+
+          }
 
 
 
@@ -688,12 +769,16 @@ setTimeout(()=>{
 
 
 
-  
-  
+
+
+
+
+
+
         }).catch(err => {
           console.log('inside catch block.');
           if (err.response) {
-  
+
             console.log(err.response.data);
             console.log(err.response.status);
             console.log(err.response.headers);
@@ -701,8 +786,8 @@ setTimeout(()=>{
           } else if (err.request) {
             console.log(err.request);
           } else {
-  
-  
+
+
             toast.error('Tạo danh sách điểm danh thất bại!', {
               position: "top-right",
               autoClose: 2000,
@@ -718,9 +803,9 @@ setTimeout(()=>{
 
 
     })
-    
 
-  
+
+
 
 
 
@@ -738,83 +823,83 @@ setTimeout(()=>{
 
   const createDateAttendanceAuto = () => {
 
-      var date = new Date();
-      var day = date.getDate();
-      var month = date.getMonth() + 1;
-      var year = date.getFullYear();
-     
+    var date = new Date();
+    var day = date.getDate();
+    var month = date.getMonth() + 1;
+    var year = date.getFullYear();
 
 
-      if(day.toString().length===1){
-        day='0'+day.toString();
 
-      }
+    if (day.toString().length === 1) {
+      day = '0' + day.toString();
 
-      if(month.toString().length===1){
-        month='0'+month.toString();
+    }
 
-      }
+    if (month.toString().length === 1) {
+      month = '0' + month.toString();
 
-      var result = year+'-'+month+'-'+day;
+    }
 
-console.log(day.toString().length)
-console.log(result)
-createAttendance();
-      
- 
+    var result = year + '-' + month + '-' + day;
 
-    setTimeout(()=>{
+    console.log(day.toString().length)
+    console.log(result)
+    createAttendance();
+
+
+
+    setTimeout(() => {
       CallAPI('/date-attendances', 'POST',
-      {
-        "date": result,
-        "attendances": listIdArrayAttendance
-      }
-      , localStorage.getItem('jwt')).then(res => {
-        if (res.status === 200) {
-          toast.success('🦄 Tạo danh sách điểm danh ngày thành công!', {
-            position: "top-right",
-            autoClose: 2000,
-            hideProgressBar: true,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
-          });
-    
+        {
+          "date": result,
+          "attendances": listIdArrayAttendance
         }
-    
-    
-    
-    
-    
-      }).catch(err => {
-        console.log('inside catch block.');
-        if (err.response) {
-    
-          console.log(err.response.data);
-          console.log(err.response.status);
-          console.log(err.response.headers);
-          console.log(err.response.data.m);
-        } else if (err.request) {
-          console.log(err.request);
-        } else {
-    
-        
-          toast.error('Tạo danh sách điểm danh thất bại!', {
-            position: "top-right",
-            autoClose: 2000,
-            hideProgressBar: true,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
-          });
-        }
-        console.log(JSON.stringify(err));
-      });
-     
-    window.location.reload()
-    },3000)
+        , sessionStorage.getItem('jwt')).then(res => {
+          if (res.status === 200) {
+            toast.success('🦄 Tạo danh sách điểm danh ngày thành công!', {
+              position: "top-right",
+              autoClose: 2000,
+              hideProgressBar: true,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+              progress: undefined,
+            });
+
+          }
+
+
+
+
+
+        }).catch(err => {
+          console.log('inside catch block.');
+          if (err.response) {
+
+            console.log(err.response.data);
+            console.log(err.response.status);
+            console.log(err.response.headers);
+            console.log(err.response.data.m);
+          } else if (err.request) {
+            console.log(err.request);
+          } else {
+
+
+            toast.error('Tạo danh sách điểm danh thất bại!', {
+              position: "top-right",
+              autoClose: 2000,
+              hideProgressBar: true,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+              progress: undefined,
+            });
+          }
+          console.log(JSON.stringify(err));
+        });
+
+      // window.location.reload()
+    }, 10000)
 
 
 
@@ -827,15 +912,7 @@ createAttendance();
 
 
 
-}
-
-
-
-
-
-
-
- 
+  }
 
 
 
@@ -845,10 +922,18 @@ createAttendance();
 
 
 
- 
 
 
-  localStorage.setItem('date', listArray)
+
+
+
+
+
+
+
+
+
+  sessionStorage.setItem('date', listArray)
 
 
 
@@ -863,7 +948,7 @@ createAttendance();
   };
 
 
-  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - employees.length) : 0;
+  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
 
   const filteredUsers = rows;
 
@@ -871,22 +956,38 @@ createAttendance();
 
 
   return (
-    <Page title="Danh Sách Theo Dõi Điểm Danh Hằng Ngày | Kim Long Tài">
+    <Page title="Theo Dõi Điểm Danh Hằng Ngày | Kim Long Tài">
 
       <Container>
         <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
           <DateTimer />
           <Typography variant="h4" gutterBottom>
-            Danh Sách Theo Dõi Điểm Danh Hằng Ngày
+            Theo Dõi Điểm Danh Hằng Ngày
           </Typography>
-          <Button onClick={handleClickOpenCreate}
+          <LoadingButton
+            onClick={handleClickOpenCreate}
+            variant="contained"
+            component={RouterLink}
+            to="#"
+            startIcon={<Icon icon={plusFill} />}
+            loading={isSubmitting}
+          >
+            Tạo Ngày Điểm Danh
+          </LoadingButton>
+
+
+
+          {/* <Button onClick={handleClickOpenCreate}
             variant="contained"
             component={RouterLink}
             to="#"
             startIcon={<Icon icon={plusFill} />}
           >
             Tạo Ngày Điểm Danh
-          </Button>
+          </Button> */}
+
+
+
           <Dialog
             open={openCreateDateAttendance}
             TransitionComponent={Transition}
@@ -901,31 +1002,28 @@ createAttendance();
                 <br></br><br></br>
               </DialogContentText>
 
-              <Container maxWidth="xl">
+              <Container maxWidth="800px">
                 <form>
-                  <Grid container spacing={3}>
-                    <TextField
-                      fullWidth
-                      id="date-local"
-                      label="Chọn Ngày Tạo Danh Sách Điểm Danh"
-                      type="date"
-                      value={chooseDatetime}
-                      onChange={handleChooseDatetime}
-
-                      InputLabelProps={{
-                        shrink: true,
-                      }}
-
-                    />
-
-                    <Grid item xs={12} md={6} lg={6}>
+                  <Grid item xs={12} md={12} lg={12}>
+                    <LocalizationProvider dateAdapter={AdapterDateFns} locale={viLocale}>
 
 
 
-                    </Grid>
-                    <Grid item xs={12} md={6} lg={6}>
+                      <MobileDatePicker
 
-                    </Grid>
+                        label="Chọn Ngày Tạo Danh Sách Điểm Danh"
+                        value={chooseDatetime}
+                        onChange={(newValue) => {
+                          setChooseDatetime(newValue);
+                        }}
+                        renderInput={(params) => <TextField {...params} />}
+                      />
+
+
+
+                    </LocalizationProvider>
+
+
                   </Grid>
 
 
@@ -963,7 +1061,7 @@ createAttendance();
                     <TableCell />
                     <TableCell>Ngày</TableCell>
                     <TableCell>
-                     Hàng động
+                      Hàng động
                     </TableCell>
 
 
@@ -975,19 +1073,19 @@ createAttendance();
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                {filteredUsers
+                  {filteredUsers
                     .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                     .map((row) => (
                       <Row key={row.id} row={row} />
                     ))}
 
-{/* 
+                  {/* 
                   {rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => (
                     <Row key={row.id} row={row} />
                   ))} */}
 
 
-{emptyRows > 0 && (
+                  {emptyRows > 0 && (
                     <TableRow style={{ height: 53 * emptyRows }}>
                       <TableCell colSpan={6} />
                     </TableRow>
@@ -998,7 +1096,7 @@ createAttendance();
                   <TableBody>
                     <TableRow>
                       <TableCell align="center" colSpan={6} sx={{ py: 3 }}>
-                    
+
                       </TableCell>
                     </TableRow>
                   </TableBody>

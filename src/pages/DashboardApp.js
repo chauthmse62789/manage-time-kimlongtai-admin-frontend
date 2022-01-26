@@ -27,7 +27,7 @@ export default function DashboardApp() {
 
   function getCountTimecards() {
     axios.get(`${Config.API_URL}/time-cards/count`, {
-      'headers': { 'Authorization': 'Bearer ' + localStorage.getItem('jwt') }
+      'headers': { 'Authorization': 'Bearer ' + sessionStorage.getItem('jwt') }
 
     }).then(res => {
       setCountTimecard(res.data)
@@ -41,7 +41,7 @@ export default function DashboardApp() {
   
   function getCountStore() {
     axios.get(`${Config.API_URL}/stores/count`, {
-      'headers': { 'Authorization': 'Bearer ' + localStorage.getItem('jwt') }
+      'headers': { 'Authorization': 'Bearer ' + sessionStorage.getItem('jwt') }
 
     }).then(res => {
       setCountStore(res.data)
@@ -58,7 +58,7 @@ export default function DashboardApp() {
     
   function getCountNotes() {
     axios.get(`${Config.API_URL}/notes/count`, {
-      'headers': { 'Authorization': 'Bearer ' + localStorage.getItem('jwt') }
+      'headers': { 'Authorization': 'Bearer ' + sessionStorage.getItem('jwt') }
 
     }).then(res => {
       setCountNotes(res.data)

@@ -39,6 +39,12 @@ import plusFill from '@iconify/icons-eva/plus-fill';
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
 import * as Config from '../constants/config'
+import { MobileDateTimePicker } from '@material-ui/lab';
+import AdapterDateFns from '@material-ui/lab/AdapterDateFns';
+import LocalizationProvider from '@material-ui/lab/LocalizationProvider';
+import viLocale from 'date-fns/locale/vi';
+
+
 
 
 const TABLE_HEAD = [
@@ -115,11 +121,11 @@ export default function Note() {
 
 
 
- 
+
   const [openSignUp, setOpenSignUp] = React.useState(false);
 
   const handleClickOpenSignUp = () => {
-    
+
     setOpenSignUp(true);
     getEmployees();
   };
@@ -142,61 +148,61 @@ export default function Note() {
     handleCloseSignUp();
 
     CallAPI('/notes', 'POST',
-    {
-      "description": notesInput.description,
-      "date": chooseDatetime,
-      "users_permissions_user":chooseEmployee
-    }
-
-
-
-
-    , localStorage.getItem('jwt')).then(res => {
-      if (res.status === 200) {
-        toast.success('🦄 Tạo ghi chú thành công!', {
-          position: "top-right",
-          autoClose: 2000,
-          hideProgressBar: true,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-        });
-
-        setTimeout(() => {
-          getNotes()
-        }, 1000)
+      {
+        "description": notesInput.description,
+        "date": chooseDatetime,
+        "users_permissions_user": chooseEmployee
       }
 
 
 
 
+      , sessionStorage.getItem('jwt')).then(res => {
+        if (res.status === 200) {
+          toast.success('🦄 Tạo ghi chú thành công!', {
+            position: "top-right",
+            autoClose: 2000,
+            hideProgressBar: true,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
 
-    }).catch(err => {
-      console.log('inside catch block.');
-      if (err.response) {
-
-        console.log(err.response.data);
-        console.log(err.response.status);
-        console.log(err.response.headers);
-        console.log(err.response.data.m);
-      } else if (err.request) {
-        console.log(err.request);
-      } else {
+          setTimeout(() => {
+            getNotes()
+          }, 1000)
+        }
 
 
-        toast.error('Tạo ghi chú thất bại!', {
-          position: "top-right",
-          autoClose: 2000,
-          hideProgressBar: true,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-        });
-      }
-      console.log(JSON.stringify(err));
-    });
+
+
+
+      }).catch(err => {
+        console.log('inside catch block.');
+        if (err.response) {
+
+          console.log(err.response.data);
+          console.log(err.response.status);
+          console.log(err.response.headers);
+          console.log(err.response.data.m);
+        } else if (err.request) {
+          console.log(err.request);
+        } else {
+
+
+          toast.error('Tạo ghi chú thất bại!', {
+            position: "top-right",
+            autoClose: 2000,
+            hideProgressBar: true,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+          });
+        }
+        console.log(JSON.stringify(err));
+      });
 
 
 
@@ -209,7 +215,7 @@ export default function Note() {
 
   function getNotes() {
     axios.get(`${Config.API_URL}/notes?&_sort=date:DESC`, {
-      'headers': { 'Authorization': 'Bearer ' + localStorage.getItem('jwt') }
+      'headers': { 'Authorization': 'Bearer ' + sessionStorage.getItem('jwt') }
 
     }).then(res => {
       setNotes(res.data)
@@ -226,13 +232,13 @@ export default function Note() {
 
 
 
-  const [employees,setEmployees] = useState([]);
+  const [employees, setEmployees] = useState([]);
 
-  function getEmployees(){
-    axios.get(`${Config.API_URL}/users`,{
-      'headers': {'Authorization': 'Bearer ' + localStorage.getItem('jwt')}
+  function getEmployees() {
+    axios.get(`${Config.API_URL}/users`, {
+      'headers': { 'Authorization': 'Bearer ' + sessionStorage.getItem('jwt') }
 
-    }).then(res=>{
+    }).then(res => {
       setEmployees(res.data)
     })
 
@@ -294,10 +300,10 @@ export default function Note() {
 
   const converDateTimeFormat = (dateTime) => {
     var d = new Date(dateTime);
-    var date = d.toLocaleDateString();
-    var time = d.toLocaleTimeString();
+    var date = d.toLocaleDateString("vi-VN");
+    // var time = d.toLocaleTimeString(); Bổ sung vào return nếu cần thiết
 
-    return date + ' ' + time
+    return date
 
 
 
@@ -306,7 +312,7 @@ export default function Note() {
 
 
 
-  
+
 
   const [chooseEmployee, setChooseEmployee] = React.useState('');
   const handleChooseEmployee = (event) => {
@@ -314,9 +320,7 @@ export default function Note() {
   };
 
   const [chooseDatetime, setChooseDatetime] = React.useState('');
-  const handleChooseDatetime = (event) => {
-    setChooseDatetime(event.target.value);
-  };
+
   return (
     <Page title="Ghi Chú |  Kim Long Tài">
       <Container>
@@ -346,55 +350,56 @@ export default function Note() {
                 Hành động này sẽ khởi tạo một ghi chú kèm với một nhân viên
               </DialogContentText>
               <Container maxWidth="xl">
-              <form>
-                <Grid container spacing={3}>
+                <form>
+                  <LocalizationProvider dateAdapter={AdapterDateFns} locale={viLocale}>
+
+                    <Grid container spacing={3}>
 
 
-                    <Grid item xs={12} md={12} lg={12}>
-                    <h4>Nhân viên cần ghi chú(*)</h4>
-                    <Select fullWidth
-                              displayEmpty
-                              labelId="demo-simple-select-label"
-                              id="demo-simple-select"
-                              value={chooseEmployee}
-                              onChange={handleChooseEmployee}
-                              defaultValue='Geasoas'
-                            >
-                                {employees.map( (e) => {
-                                    if(e.nameStore!=='VIP'){
-                                      return <MenuItem key={e.id} value={e.id}>{e.username + ' ' + e.firstName}</MenuItem>
+                      <Grid item xs={12} md={12} lg={12}>
+                        <h4>Nhân viên cần ghi chú(*)</h4>
+                        <Select fullWidth
+                          displayEmpty
+                          labelId="demo-simple-select-label"
+                          id="demo-simple-select"
+                          value={chooseEmployee}
+                          onChange={handleChooseEmployee}
+                          defaultValue='Geasoas'
+                        >
+                          {employees.map((e) => {
+                            if (e.nameStore !== 'VIP') {
+                              return <MenuItem key={e.id} value={e.id}>{e.username + ' ' + e.firstName}</MenuItem>
 
 
-                                    }
-                                        return null;
-                                })}
+                            }
+                            return null;
+                          })}
 
-                             
-                         
-                            </Select>
-                      <TextField name="description" margin="normal" id="standard-basic" fullWidth label="Ghi chú" value={notesInput.description} onChange={onChange} />
+
+
+                        </Select>
+                        <TextField name="description" margin="normal" id="standard-basic" fullWidth label="Ghi chú" value={notesInput.description} onChange={onChange} />
+
+
+                      </Grid>
+
+                    </Grid>
+                    <Grid item xs={12} sm={12} lg={12}>
+                     
+                      <MobileDateTimePicker
+                      label='Chọn Ngày/Thời gian'
+                      value={chooseDatetime}
+                      onChange={(newValue) => {
+                        setChooseDatetime(newValue);
+                      }}
+                      renderInput={(params) => <TextField fullWidth  {...params} />}
+                    />
+
+                      
 
 
                     </Grid>
-                    
-                  </Grid>
-                  <Grid item xs={12} sm={12} lg={12}>
-                                  <br></br>
-                    <TextField
-                    fullWidth
-                      id="datetime-local"
-                      label="Chọn Ngày/Thời gian"
-                      type="datetime-local"
-                      value={chooseDatetime}
-                      onChange={handleChooseDatetime}
-                      
-                      InputLabelProps={{
-                        shrink: true,
-                      }}
-                     
-                    />
-                  </Grid>
-
+                  </LocalizationProvider>
                 </form>
               </Container>
 
@@ -442,7 +447,7 @@ export default function Note() {
                 <TableBody>
                   {filteredUsers
                     .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                    .map((row,stt=0) => {
+                    .map((row, stt = 0) => {
                       const { id, description, date, users_permissions_user } = row;
                       const isItemSelected = selected.indexOf(id) !== -1;
 

@@ -6,7 +6,12 @@ import downloadFill from '@iconify/icons-eva/download-fill';
 import { Icon } from '@iconify/react';
 export const ExportCSVByMonths = ({csvData, fileName}) => {
 
-
+    const formatDateFrame = (date) => {
+        var d = new Date(date);
+        var n = d.toLocaleDateString("vi-VN");
+    
+        return n
+      }
 
     const fileType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
     const fileExtension = '.xlsx';
@@ -14,7 +19,7 @@ export const ExportCSVByMonths = ({csvData, fileName}) => {
     const exportToCSV = (csvData, fileName) => {
         const ws = XLSX.utils.json_to_sheet(csvData.map((item,stt=0)=>{
 
-            return ( { 'STT':++stt, 'HỌ TÊN':item.users_permissions_user.lastName +' ' +item.users_permissions_user.firstName,'TRẠNG THÁI NHÂN VIÊN':item.users_permissions_user.blocked===false ?'Còn Hiệu Lực':'Tạm Khóa','TỪ NGÀY':item.fromDate,'ĐẾN NGÀY':item.toDate,'SỐ LẦN NGHỈ':item.numberOfBreaks,'TỔNG THỜI GIAN LÀM VIỆC':item.sumAllTimeWork })
+            return ( { 'STT':++stt, 'HỌ TÊN':item.users_permissions_user.lastName +' ' +item.users_permissions_user.firstName,'TRẠNG THÁI NHÂN VIÊN':item.users_permissions_user.blocked===false ?'Còn Hiệu Lực':'Tạm Khóa','TỪ NGÀY':formatDateFrame(item.toDate),'ĐẾN NGÀY':formatDateFrame(item.fromDate),'SỐ NGÀY LÀM VIỆC':item.sumNumberOfWorks,'TỔNG THỜI GIAN NGHỈ':parseFloat(item.sumAllTimeBreaks).toFixed(2),'TỔNG THỜI GIAN LÀM VIỆC':parseFloat(item.sumAllTimeWork).toFixed(2) })
 
         }));
         const wb = { Sheets: { 'data': ws }, SheetNames: ['data'] };
@@ -31,7 +36,7 @@ export const ExportCSVByMonths = ({csvData, fileName}) => {
             to="#"
             startIcon={<Icon icon={downloadFill} />}
         onClick={(e) => 
-            exportToCSV(csvData,fileName)}>Export</Button>
+            exportToCSV(csvData,fileName)}>Xuất</Button>
        
         
     )

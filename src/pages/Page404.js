@@ -38,7 +38,7 @@ export default function Page404() {
             <motion.div variants={varBounceIn}>
               <Box
                 component="img"
-                src="/static/illustrations/illustration_404.svg"
+                src="https://bizflyportal.mediacdn.vn/bizflyportal/459/347/2020/06/02/17/37/70515910726734841.jpg"
                 sx={{ height: 260, mx: 'auto', my: { xs: 5, sm: 10 } }}
               />
             </motion.div>

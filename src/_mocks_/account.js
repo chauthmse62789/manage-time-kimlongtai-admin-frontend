@@ -14,9 +14,8 @@ const account = {
 };
 
 function getInfo(){
-  CallAPI('/users/me', 'GET', null, localStorage.getItem('jwt')).then(res => {
-               console.log(res.data)
-   console.log('Show info account')
+  CallAPI('/users/me', 'GET', null, sessionStorage.getItem('jwt')).then(res => {
+              
     account.id = res.data.id;
     account.email = res.data.email;
     account.displayName = res.data.username;

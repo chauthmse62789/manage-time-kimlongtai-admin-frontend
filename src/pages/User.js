@@ -39,7 +39,10 @@ import { ToastContainer, toast } from 'react-toastify';
 import Chip from '@material-ui/core/Chip';
 import { makeStyles } from '@material-ui/styles';
 import * as Config from '../constants/config'
-
+import AdapterDateFns from '@material-ui/lab/AdapterDateFns';
+import LocalizationProvider from '@material-ui/lab/LocalizationProvider';
+import viLocale from 'date-fns/locale/vi';
+import { MobileDatePicker } from '@material-ui/lab';
 
 
 const TABLE_HEAD = [
@@ -179,7 +182,7 @@ export default function User() {
 
 
 
-        , localStorage.getItem('jwt')).then(res => {
+        , sessionStorage.getItem('jwt')).then(res => {
           if (res.status === 200) {
             toast.success('🦄 Tạo nhân viên thành công!', {
               position: "top-right",
@@ -243,7 +246,7 @@ export default function User() {
 
   function getEmployee() {
     axios.get(`${Config.API_URL}/users`, {
-      'headers': { 'Authorization': 'Bearer ' + localStorage.getItem('jwt') }
+      'headers': { 'Authorization': 'Bearer ' + sessionStorage.getItem('jwt') }
 
     }).then(res => {
       setEmployees(res.data);
@@ -255,7 +258,7 @@ export default function User() {
 
   function getStores() {
     axios.get(`${Config.API_URL}/stores`, {
-      'headers': { 'Authorization': 'Bearer ' + localStorage.getItem('jwt') }
+      'headers': { 'Authorization': 'Bearer ' + sessionStorage.getItem('jwt') }
 
     }).then(res => {
       setStores(res.data)
@@ -324,7 +327,7 @@ export default function User() {
 
   const formatDateFrame = (date) => {
     var d = new Date(date);
-    var n = d.toLocaleDateString();
+    var n = d.toLocaleDateString("vi-VN");
 
     return n
   }
@@ -336,7 +339,7 @@ export default function User() {
 
 
 
-      , localStorage.getItem('jwt')).then(res => {
+      , sessionStorage.getItem('jwt')).then(res => {
         if (res.status === 200) {
           toast.success('🦄 Cật nhật thành công', {
             position: "top-right",
@@ -398,7 +401,7 @@ export default function User() {
 
 
 
-      , localStorage.getItem('jwt')).then(res => {
+      , sessionStorage.getItem('jwt')).then(res => {
         if (res.status === 200) {
           toast.success('🦄 Cật nhật thành công', {
             position: "top-right",
@@ -482,26 +485,32 @@ export default function User() {
               <Container maxWidth="lg">
                 <br></br>
                 <form>
+                <LocalizationProvider dateAdapter={AdapterDateFns} locale={viLocale}>
                   <Grid container spacing={3}>
 
                   <TextField required name="username" margin="normal" id="standard-basic" fullWidth label="Username" value={user.username} onChange={onChange} />
                   <TextField name="lastName" margin="normal" id="standard-basic" fullWidth label="Họ" value={user.lastName} onChange={onChange} />
                 
                   <TextField name="firstName" margin="normal" id="standard-basic" fullWidth label="Tên" value={user.firstName} onChange={onChange} />
-                  <TextField
-                        fullWidth
-                        name="dob"
-                        id="date"
-                        label="Ngày sinh"
-                        type="date"
+                  
+
+
+
+                  <MobileDatePicker
+                        label='Ngày sinh(*)'
                         value={user.dob}
-                        onChange={onChange}
-
-                        InputLabelProps={{
-                          shrink: true,
+                        onChange={(newValue) => {
+                          setUser({ ...user, dob: newValue });
                         }}
+                        renderInput={(params) => <TextField fullWidth  {...params} />}
+                      />
 
-                      />  <TextField required name="email" margin="normal" id="standard-basic" fullWidth label="Email" value={user.email} onChange={onChange} />
+
+                  
+
+
+                  
+                  <TextField required name="email" margin="normal" id="standard-basic" fullWidth label="Email" value={user.email} onChange={onChange} />
                   <TextField name="cmndcccd" type="number" margin="normal" id="standard-basic" fullWidth label="CMND/CCCD" value={user.cmndcccd} onChange={onChange} />
                   <TextField name="address" margin="normal" id="standard-basic" fullWidth label="Địa chỉ" value={user.address} onChange={onChange} />
 
@@ -518,6 +527,7 @@ export default function User() {
                   <br></br>  <br></br>
                     <Select  className={classes.formControl}
                     displayEmpty
+                    fullWidth
                               labelId="demo-simple-select-label"
                               id="demo-simple-select"
                               value={chooseStore}
@@ -539,7 +549,7 @@ export default function User() {
                             </Select>
 
                   </Grid>
-
+</LocalizationProvider>
                 </form>
               </Container>
 
